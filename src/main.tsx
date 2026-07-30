@@ -50,6 +50,23 @@ if (typeof window.zterm !== 'undefined' && /Mac/i.test(navigator.userAgent)) {
 
 window.zterm = createTauriZterm()
 
+/**
+ * 禁止把本地文件拖到窗口非上传区时，WebView 直接打开/导航到该文件。
+ * 仅拦截 OS 文件拖入（dataTransfer 含 Files）；侧边栏会话/标签页的 HTML5 DnD 不受影响。
+ * SFTP 区仍会收到 drop 并自行上传。
+ */
+;(() => {
+  const blockFileNavigation = (e: DragEvent) => {
+    const types = e.dataTransfer?.types
+    if (!types) return
+    const hasFiles = Array.from(types as ArrayLike<string>).includes('Files')
+    if (!hasFiles) return
+    e.preventDefault()
+  }
+  window.addEventListener('dragover', blockFileNavigation, true)
+  window.addEventListener('drop', blockFileNavigation, true)
+})()
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
     <App />

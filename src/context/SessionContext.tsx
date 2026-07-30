@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react'
 import type { AppSettings } from '@/types/settings'
 import { sessionEndpoint } from '@/types/session'
@@ -271,12 +272,12 @@ export function SessionProvider({
   const handleSaveTabOutput = useCallback(async (sessionId: string) => {
     const getter = terminalExportersRef.current[sessionId]
     if (!getter) {
-      alert(t('app.saveOutputNotReady'))
+      void uiAlert(t('app.saveOutputNotReady'))
       return
     }
     const text = getter()
     if (!text?.length) {
-      alert(t('app.saveOutputEmpty'))
+      void uiAlert(t('app.saveOutputEmpty'))
       return
     }
     const s = sessions.find(v => v.id === sessionId)
@@ -286,9 +287,9 @@ export function SessionProvider({
       const res = await window.zterm?.save?.saveFile('terminalOutput', filename, text)
       if (res?.content?.canceled) return
       if (alertIpcFailure(t, res, 'app.saveOutputFail')) return
-      alert(t('app.saveOutputOk'))
+      void uiAlert(t('app.saveOutputOk'))
     } catch (err: unknown) {
-      alert(t('app.saveOutputFail', {
+      void uiAlert(t('app.saveOutputFail', {
         msg: err instanceof Error ? err.message : String(err),
       }))
     }

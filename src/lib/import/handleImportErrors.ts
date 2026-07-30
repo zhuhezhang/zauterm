@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import { formatIpcResponseError } from '../ipc/formatIpcError'
 import type { TranslateFn } from '../../types/common'
 import type { ImportError } from '../../types/common'
@@ -71,8 +72,8 @@ export function formatImportError(t: TranslateFn, err: unknown): string {
  */
 export function reportImportError(t: TranslateFn, err: unknown): void {
   if (isImportPathDeniedError(err)) {
-    alert(formatImportPathDeniedMessage(t, err))
+    void uiAlert(formatImportPathDeniedMessage(t, err))
     return
   }
-  alert(t('settings.importFail', { msg: formatImportError(t, err) }))
+  void uiAlert(t('settings.importFail', { msg: formatImportError(t, err) }))
 }

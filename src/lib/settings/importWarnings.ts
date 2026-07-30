@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import type { TranslateFn } from '../../types/common'
 import type { SettingsImportWarning } from '../../types/common'
 
@@ -125,11 +126,11 @@ export function reportSettingsImportResult(
   const otherWarnings = warnings.filter((w) => !isDuplicateHighlightRuleWarning(w))
 
   if (otherWarnings.length) {
-    alert(t('settings.importSettingsPartial', {
+    void uiAlert(t('settings.importSettingsPartial', {
       duplicateNote,
       details: formatSettingsImportWarnings(t, otherWarnings),
     }))
   } else {
-    alert(t('settings.importSettingsOk', { duplicateNote }))
+    void uiAlert(t('settings.importSettingsOk', { duplicateNote }))
   }
 }

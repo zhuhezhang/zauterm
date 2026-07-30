@@ -98,6 +98,26 @@ pub async fn sftp_upload(
 }
 
 #[tauri::command]
+pub async fn sftp_upload_bytes(
+    state: State<'_, Arc<AppState>>,
+    id: String,
+    remote_path: String,
+    data: Vec<u8>,
+) -> Result<Value, String> {
+    Ok(match sftp::request(&state, &id, |reply| SftpCmd::UploadBytes {
+        remote_path,
+        data,
+        reply,
+    })
+    .await
+    {
+        Ok(()) => ipc_ok_empty(),
+        Err(code) if code.contains('.') => ipc_fail_known(&code),
+        Err(e) => ipc_fail_msg(e),
+    })
+}
+
+#[tauri::command]
 pub async fn sftp_mkdir(state: State<'_, Arc<AppState>>, id: String, remote_path: String) -> Result<Value, String> {
     Ok(match sftp::request(&state, &id, |reply| SftpCmd::Mkdir { remote_path, reply }).await {
         Ok(()) => ipc_ok_empty(),

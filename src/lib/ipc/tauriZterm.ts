@@ -107,6 +107,12 @@ export function createTauriZterm(): ZTermApi {
         invoke<IpcResult>('sftp_download_dir', { id, remoteDir, localDir }),
       upload: (id, localPath, remotePath) =>
         invoke<IpcResult>('sftp_upload', { id, localPath, remotePath }),
+      uploadBytes: (id, remotePath, data) =>
+        invoke<IpcResult>('sftp_upload_bytes', {
+          id,
+          remotePath,
+          data: Array.from(data),
+        }),
       mkdir: (id, remotePath) => invoke<IpcResult>('sftp_mkdir', { id, remotePath }),
       delete: (id, remotePath) => invoke<IpcResult>('sftp_delete', { id, remotePath }),
       rename: (id, oldPath, newPath) => invoke<IpcResult>('sftp_rename', { id, oldPath, newPath }),

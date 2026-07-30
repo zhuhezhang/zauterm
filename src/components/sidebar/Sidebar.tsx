@@ -12,6 +12,7 @@ import { buildTree, flattenVisibleTree, NO_GROUP_PLACEHOLDERS } from '@/lib/sess
 import { sessionEndpoint } from '@/types/session'
 import { hasInvalidLabelChars } from '@/lib/safeFileName'
 import { revealAndFocusSessionSearch } from '@/lib/sessionSearchFocus'
+import { uiAlert, uiConfirm } from '@/lib/ui/nativeDialog'
 
 const SftpPanel = lazy(() => import('../SftpPanel'))
 import { Chevron, FolderIcon } from './icons'
@@ -174,7 +175,7 @@ export default memo(function Sidebar(props: SidebarProps) {
       if (renameGroupAlertingRef.current) return
       renameGroupAlertingRef.current = true  // 设置警告状态，避免 alert 触发的事件链（blur/focus）导致重复弹窗
       ignoreRenameGroupBlurRef.current = true  // 设置忽略 blur 状态（blur 事件也就是失去焦点事件）
-      alert(t('sidebar.renameGroupInvalid'))
+      void uiAlert(t('sidebar.renameGroupInvalid'))
       renameGroupAlertingRef.current = false
       setTimeout(() => {  // 等当前调用栈结束后再 focus()，确保浏览器/React 状态稳定，焦点能正确回到输入框
         renameGroupInputRef.current?.focus()
@@ -224,11 +225,11 @@ export default memo(function Sidebar(props: SidebarProps) {
    * 删除分组
    * @param path 分组路径
    */
-  const deleteGroup = (path: string) => {
+  const deleteGroup = async (path: string) => {
     const w = settings?.deleteGroupWithSessions  // 是否删除分组时连带删除其下的所有会话
     const name = path.split('/').pop()  // 获取分组名称
     const msg = w ? t('sidebar.deleteGroupWithKids', { name: name ?? path }) : t('sidebar.deleteGroupOnly', { name: name ?? path })
-    if (settings?.confirmDeleteGroup !== false && !confirm(msg)) return  // 如果配置了不确认删除，则不删除
+    if (settings?.confirmDeleteGroup !== false && !(await uiConfirm(msg))) return  // 如果配置了不确认删除，则不删除
     if (w)  // 如果配置了删除分组时连带删除其下的所有会话，则删除所有会话
       onUpdateSessions(savedSessions.filter(s => s.group !== path && !s.group?.startsWith(path + '/')))
     else // 不删除会话：移为未分组，并与已有未分组会话去重标签名
@@ -241,8 +242,8 @@ export default memo(function Sidebar(props: SidebarProps) {
    * @param id 会话 ID
    * @param label 会话名称
    */
-  const deleteSession = (id: string, label: string) => {
-    if (settings?.confirmDeleteSession !== false && !confirm(t('sidebar.deleteSession', { label }))) return  // 如果配置了不确认删除，则不删除
+  const deleteSession = async (id: string, label: string) => {
+    if (settings?.confirmDeleteSession !== false && !(await uiConfirm(t('sidebar.deleteSession', { label })))) return  // 如果配置了不确认删除，则不删除
     onDeleteSaved(id)
   }
 
@@ -267,7 +268,7 @@ export default memo(function Sidebar(props: SidebarProps) {
       if (renameSessionAlertingRef.current) return
       renameSessionAlertingRef.current = true  // 设置警告状态，避免 alert 触发的事件链（blur/focus）导致重复弹窗
       ignoreRenameSessionBlurRef.current = true  // 设置忽略 blur 状态（blur 事件也就是失去焦点事件）
-      alert(t('sidebar.renameSessionInvalid'))
+      void uiAlert(t('sidebar.renameSessionInvalid'))
       renameSessionAlertingRef.current = false  // 设置警告状态为 false，避免重复弹窗
       setTimeout(() => {  // 等当前调用栈结束后再 focus()，确保浏览器/React 状态稳定，焦点能正确回到输入框
         renameSessionInputRef.current?.focus()

@@ -2,6 +2,7 @@ import type { TranslateFn } from '../../types/common'
 import type { IpcThrownError } from '../../types/common'
 import type { IpcResult } from '../../../shared/ipc'
 import { ipcErrorFields, isIpcFailure } from './ipcResponse'
+import { uiAlert } from '@/lib/ui/nativeDialog'
 
 /**
  * 将 IPC 错误码译为界面文案（仅 errorKnown 为 true 时调用）
@@ -31,11 +32,11 @@ export function formatIpcError(
 }
 
 /**
- * 失败则 alert 并返回 true；成功或未失败返回 false
+ * 失败则弹出提示并返回 true；成功或未失败返回 false
  * @param t 翻译函数
  * @param res 错误响应对象
  * @param fallbackKey i18n 键
- * @returns 是否已 alert
+ * @returns 是否已提示
  */
 export function alertIpcFailure(
   t: TranslateFn,
@@ -43,7 +44,7 @@ export function alertIpcFailure(
   fallbackKey?: string,
 ): boolean {
   if (!isIpcFailure(res)) return false
-  alert(formatIpcResponseError(t, res) || (fallbackKey ? t(fallbackKey) : ''))
+  void uiAlert(formatIpcResponseError(t, res) || (fallbackKey ? t(fallbackKey) : ''))
   return true
 }
 

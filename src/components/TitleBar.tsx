@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type MouseEvent } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useI18n } from '../context/I18nContext'
 import { isIpcSuccess } from '@/lib/ipc/ipcResponse'
 import '../styles/titlebar.css'
@@ -10,15 +11,14 @@ const IS_MAC = navigator.userAgent.includes('Mac OS X') &&
 
 /**
  * 标题栏组件，包含窗口控制按钮和应用标题
- * 通过 useState 管理窗口最大化状态，useEffect 订阅 Electron 窗口事件并初始化状态
+ * 通过 useState 管理窗口最大化状态，useEffect 订阅窗口事件并初始化状态
  * 根据平台条件渲染窗口控制按钮（MacOS 不显示）
+ * Tauri 无边框窗口需 data-tauri-drag-region + startDragging 才能拖动
  */
 export default function TitleBar({ onOpenAbout }: { onOpenAbout?: () => void }) {
   const { t } = useI18n()
   const [maximized, setMaximized] = useState(false)
 
-  // 需要 useEffect，因为这段逻辑是：
-  // 与 UI 渲染无关的副作用；需要在组件挂载后执行；应该只执行一次，而不是每次 render 都执行；访问外部系统（Electron IPC）来订阅事件和获取初始状态
   useEffect(() => {
     const off = window.zterm?.window.onMaximized((v) => setMaximized(v))
     window.zterm?.window.isMaximized().then((res) => {
@@ -27,12 +27,26 @@ export default function TitleBar({ onOpenAbout }: { onOpenAbout?: () => void }) 
     return () => off?.()
   }, [])
 
+  /** 在标题栏空白处按下左键时开始拖动窗口；按钮等交互元素除外 */
+  const onDragMouseDown = (e: MouseEvent) => {
+    if (e.buttons !== 1) return
+    const el = e.target as HTMLElement | null
+    if (el?.closest('button, a, input, textarea, select, [data-no-window-drag]')) return
+    e.preventDefault()
+    void getCurrentWindow().startDragging()
+  }
+
   return (
-    <div className={`titlebar ${IS_MAC ? 'is-mac' : 'is-not-mac'}`}>
-      <div className="titlebar-drag">
+    <div
+      className={`titlebar ${IS_MAC ? 'is-mac' : 'is-not-mac'}`}
+      data-tauri-drag-region
+      onMouseDown={onDragMouseDown}
+    >
+      <div className="titlebar-drag" data-tauri-drag-region>
         <button
           type="button"
           className="titlebar-logo-btn"
+          data-no-window-drag
           onClick={onOpenAbout}
           title={t('titlebar.about')}
         >
@@ -40,7 +54,7 @@ export default function TitleBar({ onOpenAbout }: { onOpenAbout?: () => void }) 
         </button>
       </div>
       {!IS_MAC && (
-        <div className="titlebar-controls">
+        <div className="titlebar-controls" data-no-window-drag>
           <button className="titlebar-btn minimize" onClick={() => window.zterm?.window.minimize()} title={t('titlebar.minimize')}>
             <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
           </button>

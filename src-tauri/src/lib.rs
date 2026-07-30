@@ -10,6 +10,7 @@ mod sftp;
 mod ssh;
 mod telnet;
 mod vault;
+mod traffic_lights;
 
 use session::AppState;
 use std::sync::Arc;
@@ -59,6 +60,7 @@ pub fn run() {
             commands::sftp::sftp_download,
             commands::sftp::sftp_download_dir,
             commands::sftp::sftp_upload,
+            commands::sftp::sftp_upload_bytes,
             commands::sftp::sftp_mkdir,
             commands::sftp::sftp_delete,
             commands::sftp::sftp_rename,
@@ -74,6 +76,17 @@ pub fn run() {
             commands::window::attach_maximize_events(app.handle());
             if let Ok(dir) = app.path().app_data_dir() {
                 let _ = std::fs::create_dir_all(&dir);
+            }
+            if let Some(win) = app.get_webview_window("main") {
+                traffic_lights::center_traffic_lights(&win);
+                let win2 = win.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(120));
+                    let win3 = win2.clone();
+                    let _ = win2.run_on_main_thread(move || {
+                        traffic_lights::center_traffic_lights(&win3);
+                    });
+                });
             }
             Ok(())
         })

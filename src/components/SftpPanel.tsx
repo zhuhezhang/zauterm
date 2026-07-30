@@ -8,6 +8,7 @@ import { INVALID_LABEL_CHARS } from '../../shared/others'
 import { getLocalFilePath } from '@/lib/sftp/localFilePath'
 import { readAllDirEntries } from '@/lib/sftp/readDirEntries'
 import { getZterm } from '@/lib/ipc/getZterm'
+import { uiAlert, uiConfirm } from '@/lib/ui/nativeDialog'
 import SftpFileList from './sftp/SftpFileList'
 import { useSession } from '@/context/SessionContext'
 import type { SftpPanelProps, SftpRemoteItem } from '@/types/components'
@@ -22,7 +23,7 @@ function SftpPanel({ session }: SftpPanelProps) {
   const { t } = useI18n()
   const ipcErr = (res: IpcResult | null | undefined, fallbackKey?: string) =>
     formatIpcResponseError(t, res) || (fallbackKey ? t(fallbackKey) : '')
-  const showErr = (e: unknown) => alert(formatThrownIpcError(t, e) || String(e))
+  const showErr = (e: unknown) => { void uiAlert(formatThrownIpcError(t, e) || String(e)) }
   const sftpSessionId = session?.id ? `${session.id}-sftp` : null
   const { updateSession } = useSession()
   const [path, setPath] = useState<string>(() => session?.remotePath ?? '/')  // 当前远程路径，初始值优先使用会话中的路径，否则使用根目录
@@ -152,10 +153,10 @@ function SftpPanel({ session }: SftpPanelProps) {
    */
   const handleDelete = async (item: SftpRemoteItem) => {
     if (!sftpSessionId) return
-    if (!confirm(t('sftp.confirmDelete', { name: item.name }))) return
+    if (!(await uiConfirm(t('sftp.confirmDelete', { name: item.name })))) return
     const res = await getZterm().sftp.delete(sftpSessionId, item.path ?? '')
     if (res.success) loadDir(path)
-    else alert(ipcErr(res, 'sftp.unknownError'))
+    else void uiAlert(ipcErr(res, 'sftp.unknownError'))
   }
 
   /** 开始创建文件夹 */
@@ -170,7 +171,7 @@ function SftpPanel({ session }: SftpPanelProps) {
     const name = createDirName.trim()
     if (!name) { setCreatingDir(false); return }
     if (INVALID_LABEL_CHARS.test(name)) {
-      alert(t('sftp.nameInvalid'))
+      void uiAlert(t('sftp.nameInvalid'))
       return
     }
     const newPath = path === '/' ? '/' + name : path + '/' + name
@@ -180,7 +181,7 @@ function SftpPanel({ session }: SftpPanelProps) {
       setCreateDirName('')
       loadDir(path)
     }
-    else alert(ipcErr(res, 'sftp.unknownError'))
+    else void uiAlert(ipcErr(res, 'sftp.unknownError'))
   }
 
   /** 
@@ -201,7 +202,7 @@ function SftpPanel({ session }: SftpPanelProps) {
     if (!nextName) { setRenaming(null); return }
     if (nextName === prevName) { setRenaming(null); return }
     if (INVALID_LABEL_CHARS.test(nextName)) {
-      alert(t('sftp.nameInvalid'))
+      void uiAlert(t('sftp.nameInvalid'))
       return
     }
     const dir = path === '/' ? '' : path
@@ -210,7 +211,7 @@ function SftpPanel({ session }: SftpPanelProps) {
     setRenaming(null)
     const res = await getZterm().sftp.rename(sftpSessionId, oldPath, newPath)
     if (res.success) loadDir(path)
-    else alert(ipcErr(res, 'sftp.unknownError'))
+    else void uiAlert(ipcErr(res, 'sftp.unknownError'))
   }
 
   /** 
@@ -284,6 +285,22 @@ function SftpPanel({ session }: SftpPanelProps) {
   }
 
 
+  /** 上传单个本地文件（有路径走 upload；无路径时走 uploadBytes，供 Tauri 拖拽） */
+  const uploadOne = async (localPath: string, remotePath: string, file?: File) => {
+    if (!sftpSessionId) return
+    if (localPath) {
+      const res = await getZterm().sftp.upload(sftpSessionId, localPath, remotePath)
+      assertIpcSuccess(res)
+      return
+    }
+    if (!file) throw new Error(t('sftp.unknownError'))
+    const uploadBytes = getZterm().sftp.uploadBytes
+    if (!uploadBytes) throw new Error(t('sftp.unknownError'))
+    const data = new Uint8Array(await file.arrayBuffer())
+    const res = await uploadBytes(sftpSessionId, remotePath, data)
+    assertIpcSuccess(res)
+  }
+
   /** 
    * 通过对话框上传多个顶层文件（无目录结构）
    * @param paths 本地文件路径列表
@@ -295,8 +312,7 @@ function SftpPanel({ session }: SftpPanelProps) {
         const name = localPath.split(/[/\\]/).pop()
         if (!name) continue
         const remotePath = (path === '/' ? '' : path) + '/' + name
-        const res = await getZterm().sftp.upload(sftpSessionId, localPath, remotePath)
-        assertIpcSuccess(res)
+        await uploadOne(localPath, remotePath)
       }
       loadDir(path)
     } catch (err) {
@@ -327,8 +343,7 @@ function SftpPanel({ session }: SftpPanelProps) {
         const remotePath = remoteBase + entry.relativePath
         const remoteDir = remotePath.split('/').slice(0, -1).join('/') || '/'
         await ensureRemoteDir(remoteDir, cache)
-        const res = await getZterm().sftp.upload(sftpSessionId, entry.path, remotePath)
-        assertIpcSuccess(res)
+        await uploadOne(entry.path, remotePath)
       }
       loadDir(path)
     } catch (err) {
@@ -342,7 +357,7 @@ function SftpPanel({ session }: SftpPanelProps) {
     setUploadMenuOpen(false)
     const pick = await getZterm().paths.chooseOpen('sftpUploadFiles')
     if (!pick?.success) {
-      if (pick) alert(ipcErr(pick, 'sftp.unknownError'))
+      if (pick) void uiAlert(ipcErr(pick, 'sftp.unknownError'))
       return
     }
     if (pick.content.canceled) return
@@ -357,7 +372,7 @@ function SftpPanel({ session }: SftpPanelProps) {
     setUploadMenuOpen(false)
     const pick = await getZterm().paths.chooseOpen('sftpUploadFolder')
     if (!pick?.success) {
-      if (pick) alert(ipcErr(pick, 'sftp.unknownError'))
+      if (pick) void uiAlert(ipcErr(pick, 'sftp.unknownError'))
       return
     }
     if (pick.content.canceled) return
@@ -396,23 +411,22 @@ function SftpPanel({ session }: SftpPanelProps) {
 
         for (const { file, relPath } of filesToUpload) {  // 遍历要上传的文件列表
           const localPath = getLocalFilePath(file)
-          if (!localPath) continue
           const remotePath = remoteBase + relPath
           const remoteDir = remotePath.split('/').slice(0, -1).join('/') || '/' // 获取远程目录
           await ensureRemoteDir(remoteDir, cache) // 确保远程目录存在
-          const res = await getZterm().sftp.upload(sftpSessionId, localPath, remotePath) // 上传文件
-          assertIpcSuccess(res)
+          await uploadOne(localPath, remotePath, file)
         }
         loadDir(path)
         return
       }
 
-      const droppedFiles = (Array.from(e.dataTransfer?.files ?? []) as File[]).filter((f) => getLocalFilePath(f))  // 获取拖拽的文件列表
+      const droppedFiles = (Array.from(e.dataTransfer?.files ?? []) as File[]).filter(
+        (f) => getLocalFilePath(f) || getZterm().sftp.uploadBytes,
+      )  // 获取拖拽的文件列表（Tauri 可无本地路径，走 uploadBytes）
       if (!droppedFiles.length) return
       for (const f of droppedFiles) {  // 遍历要上传的文件列表
         const remotePath = (path === '/' ? '' : path) + '/' + f.name // 获取远程路径
-        const res = await getZterm().sftp.upload(sftpSessionId, getLocalFilePath(f), remotePath) // 上传文件
-        assertIpcSuccess(res)
+        await uploadOne(getLocalFilePath(f), remotePath, f)
       }
       loadDir(path) // 刷新目录
     } catch (err) {

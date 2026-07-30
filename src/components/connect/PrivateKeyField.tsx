@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import { forwardRef, useCallback, type KeyboardEvent } from 'react'
 import { useI18n } from '@/context/I18nContext'
 import { formatThrownIpcError } from '@/lib/ipc/formatIpcError'
@@ -33,7 +34,7 @@ export const PrivateKeyField = forwardRef<HTMLTextAreaElement, PrivateKeyFieldPr
         const content = await choosePrivateKeyFile(t)
         if (content) onChange(content)
       } catch (e) {
-        alert(formatThrownIpcError(t, e) || t('connect.privateKeyChooseFail'))
+        void uiAlert(formatThrownIpcError(t, e) || t('connect.privateKeyChooseFail'))
       }
     }, [onChange, t])
 

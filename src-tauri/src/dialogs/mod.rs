@@ -55,19 +55,34 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
                         return crate::ipc::ipc_fail_known(&code);
                     }
                     let base = PathBuf::from(&dir);
+                    // Match drag-drop collectEntryNodes: keep the selected folder name
+                    // so remote gets `<folder>/...` instead of flattening files into cwd.
+                    let folder_name = base
+                        .file_name()
+                        .map(|s| s.to_string_lossy().to_string())
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or_else(|| "folder".to_string());
                     let mut entries = Vec::new();
                     for e in WalkDir::new(&base).into_iter().filter_map(|e| e.ok()) {
                         if !e.file_type().is_file() {
                             continue;
                         }
                         let full = e.path().to_string_lossy().to_string();
-                        let rel = e
+                        let rel_inner = e
                             .path()
                             .strip_prefix(&base)
                             .unwrap_or(e.path())
                             .to_string_lossy()
                             .replace('\\', "/");
+                        let rel = if rel_inner.is_empty() {
+                            folder_name.clone()
+                        } else {
+                            format!("{folder_name}/{rel_inner}")
+                        };
                         entries.push(json!({ "path": full, "relativePath": rel }));
+                    }
+                    if entries.is_empty() {
+                        return crate::ipc::ipc_ok(json!({ "canceled": true }));
                     }
                     crate::ipc::ipc_ok(json!({ "entries": entries }))
                 }

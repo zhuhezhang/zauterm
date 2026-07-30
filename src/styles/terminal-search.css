@@ -45,7 +45,7 @@
   align-items: center;
   gap: 2px;
   font-size: 12px;
-  padding-left: 11px;
+  padding-left: 24px;
   color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
@@ -57,6 +57,10 @@
 
 .terminal-search-toggle:has(input:checked) {
   color: var(--accent);
+}
+
+.terminal-search-toggle-regex {
+  padding-right: 10px;
 }
 
 .terminal-search-btn {

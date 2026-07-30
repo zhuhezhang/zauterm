@@ -83,6 +83,7 @@
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-subtle);
   min-height: 32px;
+  border-radius: 5px;
   flex-shrink: 0;
   overflow: visible;
   white-space: nowrap;
@@ -158,6 +159,7 @@
   gap: 4px;
   padding: 3px 12px;
   font-size: 12px;
+  border-radius: 5px;
   cursor: pointer;
   transition: background 0.1s;
   border-bottom: 1px solid var(--border-subtle);

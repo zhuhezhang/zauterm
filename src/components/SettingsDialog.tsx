@@ -2,6 +2,7 @@ import { useState, useEffect, Fragment, type Dispatch, type SetStateAction } fro
 import { useDismissOnEscape } from '@/hooks/useDismissOnEscape'
 import { I18nProvider, useI18n } from '@/context/I18nContext'
 import { alertIpcFailure } from '@/lib/ipc/formatIpcError'
+import { uiAlert, uiConfirm } from '@/lib/ui/nativeDialog'
 import { getZterm } from '@/lib/ipc/getZterm'
 import { isIpcSuccess } from '@/lib/ipc/ipcResponse'
 import { exportSessions, saveSessions } from '@/store/sessionStore'
@@ -112,8 +113,8 @@ function SettingsDialogContent({
   }
 
   /** 将高亮规则列表恢复为应用内置默认（仅更新表单，需再点「保存」写入本地） */
-  const handleResetHighlightRules = () => {
-    if (!confirm(t('settings.confirmResetHighlight'))) return
+  const handleResetHighlightRules = async () => {
+    if (!(await uiConfirm(t('settings.confirmResetHighlight')))) return
     const defaults = JSON.parse(JSON.stringify(DEFAULT_SETTINGS.highlightRules))
     setForm(prev => ({ ...prev, highlightRules: defaults }))
   }
@@ -221,14 +222,14 @@ function SettingsDialogContent({
   const handleExport = () => { void exportSessions(savedSessions, t) }
 
   /** 处理清除所有会话的操作，弹出两次确认对话框，确认后清除所有保存的会话和分组占位符，并更新会话列表和占位符列表 */
-  const handleClearAll = () => {
-    if (!confirm(t('settings.confirmClearSessions'))) return
-    if (!confirm(t('settings.confirmClearSessions2'))) return
+  const handleClearAll = async () => {
+    if (!(await uiConfirm(t('settings.confirmClearSessions')))) return
+    if (!(await uiConfirm(t('settings.confirmClearSessions2')))) return
     void clearAllVaultEntries()
     onUpdateSessions([])
     saveSessions([])
     onUpdatePlaceholders?.([])  // 同时清除所有分组占位符
-    alert(t('settings.clearedSessions'))
+    void uiAlert(t('settings.clearedSessions'))
   }
 
   /** 处理导出设置的操作，将当前设置导出为 JSON 文件 */
@@ -261,16 +262,16 @@ function SettingsDialogContent({
   }
 
   /** 将所有设置恢复为内置默认值；二次确认后立即写入本地并同步到应用 */
-  const handleRestoreDefaultSettings = () => {
-    if (!confirm(t('settings.confirmRestore'))) return
-    if (!confirm(t('settings.confirmRestore2'))) return
+  const handleRestoreDefaultSettings = async () => {
+    if (!(await uiConfirm(t('settings.confirmRestore')))) return
+    if (!(await uiConfirm(t('settings.confirmRestore2')))) return
     const next = JSON.parse(JSON.stringify(DEFAULT_SETTINGS))
     setForm(next)
     previewAppTheme(next.appTheme)
     onTerminalFontFamilyPreview?.(next.terminalFontFamily)
     saveSettings(next)
     onSave(next)
-    alert(t('settings.restored'))
+    void uiAlert(t('settings.restored'))
   }
 
   /** 
@@ -291,7 +292,7 @@ function SettingsDialogContent({
       }
       set('logPath', p)
     } catch (err) {
-      alert(t('settings.logPathValidateFail', { msg: err instanceof Error ? err.message : String(err) }))
+      void uiAlert(t('settings.logPathValidateFail', { msg: err instanceof Error ? err.message : String(err) }))
     }
   }
 
@@ -334,25 +335,25 @@ function SettingsDialogContent({
 
   /** 清空主进程加密库中的全部敏感凭据（不删除已保存会话条目） */
   const handleClearAllVaultSecrets = async () => {
-    if (!confirm(t('settings.confirmClearVault'))) return
-    if (!confirm(t('settings.confirmClearVault2'))) return
+    if (!(await uiConfirm(t('settings.confirmClearVault')))) return
+    if (!(await uiConfirm(t('settings.confirmClearVault2')))) return
     try {
       await clearAllVaultEntries()
-      alert(t('settings.clearedVault'))
+      void uiAlert(t('settings.clearedVault'))
     } catch (e) {
-      alert(t('settings.clearVaultFail', { msg: e instanceof Error ? e.message : String(e) }))
+      void uiAlert(t('settings.clearVaultFail', { msg: e instanceof Error ? e.message : String(e) }))
     }
   }
 
   /** 清空已保存的 SSH 已知主机公钥存储 */
   const handleClearKnownHosts = async () => {
-    if (!confirm(t('settings.confirmClearKnownHosts'))) return
+    if (!(await uiConfirm(t('settings.confirmClearKnownHosts')))) return
     try {
       const res = await getZterm().others.clearKnownHosts()
       if (alertIpcFailure(t, res)) return
-      alert(t('settings.clearedKnownHosts'))
+      void uiAlert(t('settings.clearedKnownHosts'))
     } catch (e) {
-      alert(t('settings.clearKnownHostsFail', { msg: e instanceof Error ? e.message : String(e) }))
+      void uiAlert(t('settings.clearKnownHostsFail', { msg: e instanceof Error ? e.message : String(e) }))
     }
   }
 

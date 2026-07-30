@@ -75,9 +75,18 @@ fn open_ssh_session(
         let key = host_key.to_vec();
         let key_type = format!("{host_key_type:?}");
         tauri::async_runtime::block_on(async move {
-            known_hosts::verify_host_key(&app_c, &st.known_hosts, &host, port, &key, &key_type)
-                .await
-                .unwrap_or(false)
+            let lang = st.ui_language.lock().clone();
+            known_hosts::verify_host_key_with_lang(
+                &app_c,
+                &st.known_hosts,
+                &host,
+                port,
+                &key,
+                &key_type,
+                &lang,
+            )
+            .await
+            .unwrap_or(false)
         })
     };
     if !ok {
@@ -177,6 +186,14 @@ fn run_sftp_session(
                 let r = upload_file(&app, &id, &sftp, &local_path, &remote_path, &roots);
                 let _ = reply.send(r);
             }
+            SftpCmd::UploadBytes {
+                remote_path,
+                data,
+                reply,
+            } => {
+                let r = upload_bytes(&app, &id, &sftp, &remote_path, &data);
+                let _ = reply.send(r);
+            }
             SftpCmd::Mkdir { remote_path, reply } => {
                 let r = sftp.mkdir(Path::new(&remote_path), 0o755).map_err(|e| e.to_string());
                 let _ = reply.send(r);
@@ -214,21 +231,33 @@ fn list_dir(sftp: &ssh2::Sftp, remote_path: &str) -> Result<Value, String> {
         if name == "." || name == ".." {
             continue;
         }
+        let is_dir = stat.is_dir();
+        // Match Electron SftpEntry: type / isDir / mtime(ms)
+        let mtime_ms = stat.mtime.unwrap_or(0).saturating_mul(1000);
+        let full_path = path.to_string_lossy().replace('\\', "/");
         items.push(json!({
             "name": name,
-            "path": path.to_string_lossy(),
-            "isDirectory": stat.is_dir(),
+            "type": if is_dir { "d" } else { "-" },
+            "path": full_path,
+            "isDir": is_dir,
             "size": stat.size.unwrap_or(0),
-            "modifyTime": stat.mtime.unwrap_or(0),
-            "accessTime": stat.atime.unwrap_or(0),
-            "permissions": format_mode(stat.perm.unwrap_or(0)),
+            "mtime": mtime_ms,
         }));
     }
+    items.sort_by(|a, b| {
+        let a_dir = a.get("isDir").and_then(|v| v.as_bool()).unwrap_or(false);
+        let b_dir = b.get("isDir").and_then(|v| v.as_bool()).unwrap_or(false);
+        match (a_dir, b_dir) {
+            (true, false) => std::cmp::Ordering::Less,
+            (false, true) => std::cmp::Ordering::Greater,
+            _ => {
+                let an = a.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                let bn = b.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                an.cmp(bn)
+            }
+        }
+    });
     Ok(json!({ "items": items }))
-}
-
-fn format_mode(mode: u32) -> String {
-    format!("{:04o}", mode & 0o7777)
 }
 
 fn download_file(
@@ -269,6 +298,7 @@ fn upload_file(
     roots: &[PathBuf],
 ) -> Result<(), String> {
     assert_path_allowed(Path::new(local), roots, "sftp.pathErrors.localFileDenied")?;
+    ensure_remote_parent_dirs(sftp, remote)?;
     let mut local_file = std::fs::File::open(local).map_err(|e| e.to_string())?;
     let total = local_file.metadata().map(|m| m.len()).unwrap_or(0);
     let mut remote_file = sftp
@@ -284,6 +314,50 @@ fn upload_file(
         remote_file.write_all(&buf[..n]).map_err(|e| e.to_string())?;
         transferred += n as u64;
         emit_progress(app, id, "upload", transferred, total, local);
+    }
+    Ok(())
+}
+
+fn upload_bytes(
+    app: &AppHandle,
+    id: &str,
+    sftp: &ssh2::Sftp,
+    remote: &str,
+    data: &[u8],
+) -> Result<(), String> {
+    ensure_remote_parent_dirs(sftp, remote)?;
+    let total = data.len() as u64;
+    let mut remote_file = sftp
+        .create(Path::new(remote))
+        .map_err(|e| e.to_string())?;
+    const CHUNK: usize = 65536;
+    let mut transferred = 0u64;
+    for chunk in data.chunks(CHUNK) {
+        remote_file.write_all(chunk).map_err(|e| e.to_string())?;
+        transferred += chunk.len() as u64;
+        emit_progress(app, id, "upload", transferred, total, remote);
+    }
+    Ok(())
+}
+
+/// Create remote parent directories for `remote` (best-effort; ignore already-exists).
+fn ensure_remote_parent_dirs(sftp: &ssh2::Sftp, remote: &str) -> Result<(), String> {
+    let remote = remote.replace('\\', "/");
+    let parent = match remote.rsplit_once('/') {
+        Some(("", _)) => return Ok(()), // "/file"
+        Some((p, _)) if p.is_empty() => return Ok(()),
+        Some((p, _)) => p.to_string(),
+        None => return Ok(()),
+    };
+    if parent == "/" || parent.is_empty() {
+        return Ok(());
+    }
+    let mut acc = String::new();
+    for part in parent.split('/').filter(|s| !s.is_empty()) {
+        acc.push('/');
+        acc.push_str(part);
+        // Existing dirs often return Failure/exists — ignore, matching frontend ensureRemoteDir.
+        let _ = sftp.mkdir(Path::new(&acc), 0o755);
     }
     Ok(())
 }

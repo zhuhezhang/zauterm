@@ -6,8 +6,8 @@ import '@/styles/about.css'
 
 /** 项目仓库地址 */
 const PROJECT_URLS = [
-  'https://github.com/zhuhezhang/zterm-v1',
-  'https://gitee.com/zhuhezhang/zterm-v1',
+  'https://github.com/zhuhezhang/zterm',
+  'https://gitee.com/zhuhezhang/zterm',
 ] as const
 
 /** 关于对话框 */

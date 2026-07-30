@@ -156,9 +156,18 @@ fn run_ssh_session(
         let key = host_key.to_vec();
         let key_type = format!("{host_key_type:?}");
         tauri::async_runtime::block_on(async move {
-            known_hosts::verify_host_key(&app_c, &st.known_hosts, &host, port, &key, &key_type)
-                .await
-                .unwrap_or(false)
+            let lang = st.ui_language.lock().clone();
+            known_hosts::verify_host_key_with_lang(
+                &app_c,
+                &st.known_hosts,
+                &host,
+                port,
+                &key,
+                &key_type,
+                &lang,
+            )
+            .await
+            .unwrap_or(false)
         })
     };
     if !fp_ok {

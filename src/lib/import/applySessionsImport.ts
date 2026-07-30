@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import type { TranslateFn } from '../../types/common'
 import type { SessionImportWarning } from '../../types/common'
 import type { SavedSession } from '../../types/session'
@@ -59,12 +60,12 @@ export function reportSessionsImportResult(
   const otherWarnings = warnings.filter((w) => !isDuplicateSessionWarning(w))
 
   if (otherWarnings.length) {
-    alert(t('settings.importSessionsPartial', {
+    void uiAlert(t('settings.importSessionsPartial', {
       n: addedCount,
       duplicateNote,
       details: otherWarnings.map((w) => formatSessionImportWarning(t, w)).join('\n'),
     }))
   } else {
-    alert(t('settings.importSessionsOk', { n: addedCount, duplicateNote }))
+    void uiAlert(t('settings.importSessionsOk', { n: addedCount, duplicateNote }))
   }
 }

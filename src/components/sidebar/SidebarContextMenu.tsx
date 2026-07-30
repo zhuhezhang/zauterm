@@ -4,6 +4,7 @@ import { useI18n } from '@/context/I18nContext'
 import { addGroupPlaceholder, exportSessions } from '@/store/sessionStore'
 import { hasInvalidLabelChars } from '@/lib/safeFileName'
 import type { SidebarContextMenuProps } from '@/types/components'
+import { uiAlert } from '@/lib/ui/nativeDialog'
 
 /** 上下文菜单组件：显示会话、分组、子分组、新分组等操作的上下文菜单 */
 export default function SidebarContextMenu({
@@ -45,8 +46,8 @@ export default function SidebarContextMenu({
           onKeyDown={e => {
             if (e.key === 'Enter') {
               const trimmed = subInput.trim()
-              if (!trimmed) { alert(t('sidebar.groupNameEmpty')); return }
-              if (hasInvalidLabelChars(trimmed)) { alert(t('sidebar.groupNameInvalid')); return }
+              if (!trimmed) { void uiAlert(t('sidebar.groupNameEmpty')); return }
+              if (hasInvalidLabelChars(trimmed)) { void uiAlert(t('sidebar.groupNameInvalid')); return }
               if (ctx.type !== 'group') return
               onUpdatePlaceholders?.(addGroupPlaceholder(groupPlaceholders, `${ctx.data}/${trimmed}`))
               setSubInput(null); closeCtx()
@@ -57,8 +58,8 @@ export default function SidebarContextMenu({
           <button type="button" onClick={() => { setSubInput(null); closeCtx() }}>{t('sidebar.cancel')}</button>
           <button type="button" className="confirm" onClick={() => {
             const trimmed = subInput.trim()
-            if (!trimmed) { alert(t('sidebar.groupNameEmpty')); subInputRef.current?.focus(); return }
-            if (hasInvalidLabelChars(trimmed)) { alert(t('sidebar.groupNameInvalid')); subInputRef.current?.focus(); return }
+            if (!trimmed) { void uiAlert(t('sidebar.groupNameEmpty')); subInputRef.current?.focus(); return }
+            if (hasInvalidLabelChars(trimmed)) { void uiAlert(t('sidebar.groupNameInvalid')); subInputRef.current?.focus(); return }
             onUpdatePlaceholders?.(addGroupPlaceholder(groupPlaceholders, `${ctx.data}/${trimmed}`))
             setSubInput(null); closeCtx()
           }}>{t('sidebar.confirm')}</button>
@@ -76,8 +77,8 @@ export default function SidebarContextMenu({
           onKeyDown={e => {
             if (e.key === 'Enter') {
               const trimmed = newGroupInput.trim()
-              if (!trimmed) { alert(t('sidebar.groupNameEmpty')); return }
-              if (hasInvalidLabelChars(trimmed)) { alert(t('sidebar.groupNameInvalid')); return }
+              if (!trimmed) { void uiAlert(t('sidebar.groupNameEmpty')); return }
+              if (hasInvalidLabelChars(trimmed)) { void uiAlert(t('sidebar.groupNameInvalid')); return }
               onUpdatePlaceholders?.(addGroupPlaceholder(groupPlaceholders, trimmed))
               setNewGroupInput(null); closeCtx()
             }
@@ -87,8 +88,8 @@ export default function SidebarContextMenu({
           <button type="button" onClick={() => { setNewGroupInput(null); closeCtx() }}>{t('sidebar.cancel')}</button>
           <button type="button" className="confirm" onClick={() => {
             const trimmed = newGroupInput.trim()
-            if (!trimmed) { alert(t('sidebar.groupNameEmpty')); newGroupInputRef.current?.focus(); return }
-            if (hasInvalidLabelChars(trimmed)) { alert(t('sidebar.groupNameInvalid')); newGroupInputRef.current?.focus(); return }
+            if (!trimmed) { void uiAlert(t('sidebar.groupNameEmpty')); newGroupInputRef.current?.focus(); return }
+            if (hasInvalidLabelChars(trimmed)) { void uiAlert(t('sidebar.groupNameInvalid')); newGroupInputRef.current?.focus(); return }
             onUpdatePlaceholders?.(addGroupPlaceholder(groupPlaceholders, trimmed))
             setNewGroupInput(null); closeCtx()
           }}>{t('sidebar.confirm')}</button>

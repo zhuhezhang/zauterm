@@ -20,6 +20,11 @@ pub enum SftpCmd {
         remote_path: String,
         reply: oneshot::Sender<Result<(), String>>,
     },
+    UploadBytes {
+        remote_path: String,
+        data: Vec<u8>,
+        reply: oneshot::Sender<Result<(), String>>,
+    },
     Mkdir {
         remote_path: String,
         reply: oneshot::Sender<Result<(), String>>,

@@ -368,9 +368,9 @@ export interface SidebarContextMenuProps {
   /** 复制会话的回调函数，参数为会话 ID */
   dupSession: (id: string) => void
   /** 删除会话的回调函数，参数为会话 ID 和名称 */
-  deleteSession: (id: string, label: string) => void
+  deleteSession: (id: string, label: string) => void | Promise<void>
   /** 删除分组的回调函数，参数为分组路径 */
-  deleteGroup: (path: string) => void
+  deleteGroup: (path: string) => void | Promise<void>
   /** 设置重命名状态的回调函数，参数为新的名称 */
   setRenaming: (v: string | null) => void
   /** 设置重命名值的回调函数，参数为新的名称 */

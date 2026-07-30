@@ -230,6 +230,13 @@ export interface ZTermSftpApi {
    * @returns 上传结果
    */
   upload: (id: string, localPath: string, remotePath: string) => Promise<IpcResult>
+  /**
+   * 上传内存中的文件内容到远程（Tauri 拖拽无本地路径时使用）
+   * @param id 会话 ID
+   * @param remotePath 远程路径
+   * @param data 文件字节
+   */
+  uploadBytes?: (id: string, remotePath: string, data: Uint8Array) => Promise<IpcResult>
   /** 
    * 创建远程目录
    * @param id 会话 ID

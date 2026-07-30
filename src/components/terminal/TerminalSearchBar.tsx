@@ -177,7 +177,7 @@ export function TerminalSearchBar({ searchAddon, open, onClose }: TerminalSearch
         />
         W
       </label>
-      <label className="terminal-search-toggle" title={t('terminal.searchRegex')}>
+      <label className="terminal-search-toggle terminal-search-toggle-regex" title={t('terminal.searchRegex')}>
         <input
           type="checkbox"
           checked={useRegex}

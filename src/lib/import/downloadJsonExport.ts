@@ -1,3 +1,4 @@
+import { uiAlert } from '@/lib/ui/nativeDialog'
 import type { TranslateFn } from '../../types/common'
 import type { AppSettings } from '../../types/settings'
 import type { SavedSession } from '../../types/session'
@@ -45,12 +46,12 @@ export async function downloadJsonExport(
     if (res?.content?.canceled) return
     if (alertIpcFailure(t, res, 'settings.exportFail')) return
     if (kind === 'sessions') {
-      alert(t('settings.exportSessionsOk', { n: (data as SavedSession[]).length }))
+      void uiAlert(t('settings.exportSessionsOk', { n: (data as SavedSession[]).length }))
     } else {
-      alert(t('settings.exportSettingsOk'))
+      void uiAlert(t('settings.exportSettingsOk'))
     }
   } catch (err: unknown) {
-    alert(t('settings.exportFail', {
+    void uiAlert(t('settings.exportFail', {
       msg: err instanceof Error ? err.message : String(err),
     }))
   }
