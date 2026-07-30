@@ -1,0 +1,85 @@
+.terminal-search {
+  position: fixed;
+  top: 90px;
+  right: 14px;
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
+}
+
+.terminal-search-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  width: 220px;
+  max-width: 100%;
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.terminal-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.terminal-search-status {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.terminal-search-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  padding-left: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.terminal-search-toggle input {
+  margin: 0;
+}
+
+.terminal-search-toggle:has(input:checked) {
+  color: var(--accent);
+}
+
+.terminal-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.terminal-search-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.terminal-search-close {
+  font-size: 16px;
+}

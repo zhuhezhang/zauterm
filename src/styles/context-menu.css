@@ -1,0 +1,221 @@
+/* ── 统一上下文菜单（Tab / Sidebar / SFTP） ── */
+
+@keyframes contextMenuFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 9999;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  min-width: 130px;
+  overflow: hidden;
+  font-family: var(--font-ui);
+  animation: contextMenuFadeIn 0.1s ease;
+}
+
+.context-menu:has(.context-menu-submenu) {
+  overflow: visible;
+}
+
+/* 锚定在触发按钮下方（如 SFTP 上传下拉） */
+.context-menu.context-menu--dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 30;
+}
+
+.context-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+
+.context-menu button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.context-menu button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.context-menu button.danger { color: var(--red); }
+.context-menu button.danger:hover:not(:disabled) { background: rgba(248, 81, 73, 0.1); }
+
+.context-menu button.checked {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 3px 0;
+}
+
+.context-menu-label {
+  display: block;
+  padding: 4px 12px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.context-menu-check {
+  display: inline-block;
+  width: 1em;
+  margin-right: 4px;
+}
+
+/* 二级子菜单 */
+.context-menu-submenu {
+  position: relative;
+}
+
+.context-menu button.context-menu-submenu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.context-menu-submenu-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.context-menu-submenu:hover > .context-menu-submenu-trigger,
+.context-menu-submenu:focus-within > .context-menu-submenu-trigger {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.context-menu-submenu-panel {
+  position: absolute;
+  top: -4px;
+  left: calc(100% - 4px);
+  z-index: 10000;
+  min-width: 123px;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+  animation: none;
+}
+
+.context-menu-submenu:hover > .context-menu-submenu-panel,
+.context-menu-submenu:focus-within > .context-menu-submenu-panel {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.context-menu-submenu-panel.context-menu-submenu-panel--flip {
+  left: auto;
+  right: calc(100% - 4px);
+}
+
+.context-menu button.context-menu-item-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.context-menu-shortcut {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* 内嵌输入（新建分组 / 子分组） */
+.context-menu.context-menu-input {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.context-menu-input-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-family: var(--font-ui);
+}
+
+.context-menu-input-field {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-ui);
+  padding: 4px 8px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.context-menu-input-field:focus { border-color: var(--accent); }
+
+.context-menu-input-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.context-menu-input-actions button {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.context-menu-input-actions button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.context-menu-input-actions button.confirm {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.context-menu-input-actions button.confirm:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}

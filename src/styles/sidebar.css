@@ -1,0 +1,429 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  container-type: inline-size;
+  container-name: sidebar;
+  /* 宽度由 App.jsx 动态控制，closed 时固定 40px */
+}
+.sidebar.closed { width: 40px !important; }
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 6px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 0;
+}
+
+.sidebar-toggle {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  background: none;
+  border: none;
+  flex-shrink: 0;
+}
+.sidebar-toggle:hover { color: var(--accent); background: var(--bg-hover); }
+
+.sidebar-settings-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary);
+  transition: color 0.15s, background 0.15s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+.sidebar-settings-btn:hover { color: var(--accent); background: var(--bg-hover); }
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0 8px;
+  margin: 0 3px;
+  display: block;
+}
+
+/* ── SFTP 区域 ── */
+.sidebar-sftp-section {
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 2px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  max-height: none;
+}
+
+/* ── VS Code 风格 section header ── */
+.sb-section-row {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 6px 0 4px;
+  cursor: pointer;
+  user-select: none;
+  gap: 4px;
+}
+.sb-section-row:hover { background: var(--bg-hover); }
+.sb-section-row.sessions-header { margin-top: 2px; }
+.sb-section-row.sessions-header.drop-target {
+  background: var(--accent-dim);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.sb-chevron {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  transform: rotate(0deg);
+}
+.sb-chevron.open { transform: rotate(90deg); }
+
+.sb-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sb-section-row:hover { opacity: 1; }
+
+/* ── 树容器 ── */
+.sb-tree {
+  flex: 0 0 auto;
+}
+.sb-tree.drop-target {
+  background: rgba(88,166,255,0.04);
+  outline: 1px dashed rgba(88,166,255,0.3);
+  outline-offset: -2px;
+}
+
+/* sessions-header + tree 的公共滚动容器（同一条水平滚动条） */
+.sb-sessions-scroll {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  max-height: none;
+}
+
+.sb-sessions-scroll .sb-section-row.sessions-header,
+.sb-sessions-scroll .sb-session-search-wrap,
+.sb-sessions-scroll .sb-tree {
+  min-width: max-content;
+}
+
+.sb-session-search-wrap {
+  padding: 4px 8px 6px;
+  flex-shrink: 0;
+}
+
+.sb-session-search {
+  width: 100%;
+  min-width: 160px;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  font-family: var(--font-ui);
+}
+
+.sb-session-search::placeholder {
+  color: var(--text-muted);
+}
+
+.sb-session-search:focus {
+  border-color: var(--accent);
+}
+
+.sb-sessions-scroll .sb-section-label {
+  flex: 0 0 auto;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.sb-sessions-scroll .sb-row {
+  overflow: visible;
+  min-width: max-content;
+}
+
+/* ── 通用行 ── */
+.sb-row {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  gap: 4px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sb-row:hover { background: var(--bg-hover); }
+.sb-row:hover .sb-count { opacity: 1; }
+
+.sb-row.sb-context-target,
+.sb-section-row.sb-context-target {
+  background: var(--accent-dim);
+}
+.sb-row.sb-context-target .sb-count { opacity: 1; }
+
+/* 搜索框方向键导航时仅保留键盘高亮，抑制「保存的会话」标题与树行的 :hover */
+.sb-sessions-scroll.sb-keyboard-nav .sb-section-row.sessions-header:hover {
+  background: transparent;
+}
+.sb-sessions-scroll.sb-keyboard-nav .sb-section-row.sessions-header.sb-context-target {
+  background: var(--accent-dim);
+}
+.sb-sessions-scroll.sb-keyboard-nav .sb-row:hover:not(.sb-keyboard-focus) {
+  background: transparent;
+}
+.sb-sessions-scroll.sb-keyboard-nav .sb-row:hover:not(.sb-keyboard-focus) .sb-count {
+  opacity: 0;
+}
+.sb-sessions-scroll.sb-keyboard-nav .sb-row.sb-context-target {
+  background: var(--accent-dim);
+}
+.sb-sessions-scroll.sb-keyboard-nav .sb-row.sb-context-target .sb-count {
+  opacity: 1;
+}
+
+.sb-row.sb-keyboard-focus {
+  background: var(--bg-hover);
+  outline-offset: -1px;
+}
+.sb-row.sb-keyboard-focus .sb-count { opacity: 1; }
+
+/* drop 高亮 */
+.sb-row.drop-target {
+  background: var(--accent-dim);
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* ── 分组行 ── */
+.sb-folder-row { padding-right: 6px; }
+
+.sb-folder-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sb-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.1s;
+  flex-shrink: 0;
+  min-width: 14px;
+  text-align: right;
+}
+
+/* ── 会话行 ── */
+.sb-session-row { padding-right: 8px; }
+
+.sb-session-icon {
+  font-size: 12px;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.sb-sftp-badge {
+  font-size: 9px;
+  color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ── 重命名输入框 ── */
+.sb-rename-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 1px 4px;
+  outline: none;
+  font-family: var(--font-ui);
+  min-width: 0;
+  height: 18px;
+}
+
+/* ── 空状态 ── */
+.sb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+.sb-link {
+  color: var(--accent);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+
+/* ── SFTP 文件树 ── */
+.sftp-tree { display: flex; flex-direction: column; }
+
+/* SFTP 面包屑路径 */
+.sftp-tree-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 0;
+  direction: ltl;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sftp-crumb {
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.1s, background 0.1s;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.sftp-crumb:hover { color: var(--accent); background: var(--accent-dim); }
+.sftp-crumb.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: default;
+}
+.sftp-crumb.active:hover { background: none; color: var(--text-primary); }
+
+.sftp-crumb-root { flex-shrink: 0; }
+
+.sftp-crumb-group {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sftp-crumb-sep {
+  color: var(--text-muted);
+  margin: 0 1px;
+  font-size: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sftp-crumb-root { flex-shrink: 0; }
+
+.sftp-crumb-group {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sftp-crumb-sep {
+  color: var(--text-muted);
+  margin: 0 1px;
+  font-size: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sftp-crumb.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: default;
+}
+.sftp-crumb.active:hover { background: none; color: var(--text-primary); }
+
+.sftp-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sftp-tree-item:hover { background: var(--bg-hover); }
+.sftp-tree-item.dir  { color: var(--accent); }
+.sftp-tree-item.go-up { color: var(--text-secondary); font-style: italic; }
+.sftp-tree-item.go-up:hover { color: var(--text-primary); }
+
+.sftp-tree-icon { font-size: 13px; flex-shrink: 0; }
+.sftp-tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-loading-text { padding: 8px 16px; font-size: 13px; color: var(--text-secondary); }

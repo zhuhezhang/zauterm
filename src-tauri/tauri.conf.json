@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ZTerm",
+  "version": "3.2.8",
+  "identifier": "per.zhuhezhang.zterm",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "title": "ZTerm",
+        "width": 1440,
+        "height": 850,
+        "minWidth": 800,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "decorations": false,
+        "transparent": false,
+        "backgroundColor": "#0d1117",
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 16,
+          "y": 14
+        },
+        "label": "main"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost; font-src 'self' data:; img-src 'self' data: blob:; worker-src 'self' blob:; base-uri 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "SSH/SFTP/Telnet/Serial terminal",
+    "longDescription": "A cross-platform terminal emulator supporting SSH, SFTP, Telnet and Serial."
+  },
+  "plugins": {}
+}

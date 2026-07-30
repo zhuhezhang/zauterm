@@ -1,0 +1,70 @@
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+  user-select: none;
+  padding-left: 80px; /* space for macOS traffic lights */
+}
+
+.titlebar.is-not-mac {
+  padding-left: 0;
+}
+
+.titlebar-drag {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.titlebar-logo-btn {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: color 0.15s, background 0.15s;
+}
+
+.titlebar-logo-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+  -webkit-app-region: no-drag;
+  height: 100%;
+}
+
+.titlebar-btn {
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+  border-radius: 0;
+}
+
+.titlebar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.titlebar-btn.close:hover {
+  background: var(--red);
+  color: #fff;
+}

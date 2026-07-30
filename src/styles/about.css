@@ -1,0 +1,75 @@
+.about-dialog {
+  width: 420px;
+}
+
+.about-dialog-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.about-dialog-body {
+  gap: 20px;
+}
+
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+}
+
+.about-app-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+}
+
+.about-version {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.about-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.about-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
+.about-link:hover {
+  color: var(--text-primary);
+}

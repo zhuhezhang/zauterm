@@ -1,0 +1,235 @@
+.sftp-panel {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  overflow: visible;
+  flex: 0 0 auto;
+}
+
+.sftp-header {
+  display: flex;
+  align-items: center;
+  min-width: max-content;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.sftp-title {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.sftp-toolbar {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sftp-upload-details {
+  position: relative;
+}
+
+.sftp-upload-summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.sftp-upload-summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 勿用 display:none / pointer-events:none，否则部分环境下 programmatic .click() 无法打开选择框 */
+.sftp-hidden-input {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0.01;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sftp-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.sftp-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.sftp-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  min-height: 32px;
+  flex-shrink: 0;
+  overflow: visible;
+  white-space: nowrap;
+  min-width: max-content;
+}
+
+#sftp-create-dir-btn, #sftp-cancel-dir-btn {
+  margin-left: 4px;
+}
+
+.sftp-sep {
+  color: var(--text-muted);
+  margin: 0 2px;
+  font-size: 11px;
+}
+
+.sftp-crumb {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background 0.1s, color 0.1s;
+}
+.sftp-crumb:hover { background: var(--bg-hover); color: var(--accent); }
+
+.sftp-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+.sftp-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sftp-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.2s;
+}
+
+.sftp-file-list {
+  flex: 0 0 auto;
+  overflow-y: visible;
+  display: flex;
+  flex-direction: column;
+  min-width: max-content;
+}
+
+.sftp-loading, .sftp-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sftp-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  height: 35px;
+  min-width: max-content;
+}
+
+.sftp-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.sftp-item.selected,
+.sftp-item.sftp-context-target {
+  background: var(--accent-dim);
+}
+
+.sftp-item-icon { font-size: 14px; flex-shrink: 0; }
+
+.sftp-item-name {
+  flex: 1;
+  min-width: 90px;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+.sftp-item-dir .sftp-item-name { color: var(--accent); font-weight: 600; }
+
+.sftp-item-size {
+  min-width: 64px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.sftp-item-date {
+  min-width: 110px;
+  margin-left: auto;
+  text-align: left;
+  color: var(--text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.sftp-rename-input {
+  flex: 1;
+  padding: 2px 6px;
+  font-size: 12px;
+  min-width: 90px;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+/* 窄侧边栏下响应式优化 */
+@media (max-width: 420px) {
+  .sftp-header { padding: 0 8px; gap: 6px; }
+  .sftp-title { font-size: 11px; }
+  .sftp-btn { padding: 2px 6px; font-size: 10px; }
+  .sftp-item { padding: 6px 8px; gap: 6px; }
+  .sftp-item-date { width: 88px; font-size: 10px; }
+}
+
+@media (max-width: 360px) {
+  .sftp-item-date { display: none; }
+  .sftp-item-size { width: 52px; font-size: 10px; }
+}
+
+@media (max-width: 320px) {
+  .sftp-item-size { display: none; }
+  .sftp-item { padding: 6px; }
+}
