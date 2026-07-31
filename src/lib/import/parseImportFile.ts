@@ -2,12 +2,12 @@ import type { AppSettings } from '../../types/settings'
 import type { SavedSession } from '../../types/session'
 import { createImportError } from './handleImportErrors'
 import { EXPORT_ENVELOPE_VERSION } from './constants'
-import { IMPORT_MAX_BYTES } from '../../../shared/others'
+import { IMPORT_MAX_BYTES } from '@/lib/constants'
 
-/** zterm 导出 envelope */
+/** zauterm 导出 envelope */
 export interface ExportEnvelope<T> {
   /** 导出类型 */
-  ztermExport: 'sessions' | 'settings'
+  zautermExport: 'sessions' | 'settings'
   /** 导出版本 */
   version: number
   /** 导出时间 */
@@ -43,7 +43,7 @@ export function parseImportJsonText(text: string): unknown {
 }
 
 /**
- * 解包 zterm 导出 envelope（仅支持 version 1）
+ * 解包 zauterm 导出 envelope（仅支持 version 1）
  * @param parsed 解析后的数据
  * @param expectedKind 期望的导出类型
  * @returns 解包后的数据
@@ -57,7 +57,7 @@ export function unwrapExportPayload(
   if (!isExportEnvelope(parsed)) {
     throw createImportError('invalidPayload')
   }
-  if (parsed.ztermExport !== expectedKind) {
+  if (parsed.zautermExport !== expectedKind) {
     throw createImportError('wrongFileType', { kindKey: expectedKind })
   }
   if (parsed.version !== EXPORT_ENVELOPE_VERSION) {
@@ -85,7 +85,7 @@ export function buildExportEnvelope(
   data: SavedSession[] | AppSettings,
 ): ExportEnvelope<SavedSession[] | AppSettings> {
   return {
-    ztermExport: kind,
+    zautermExport: kind,
     version: EXPORT_ENVELOPE_VERSION,
     exportedAt: new Date().toString(),
     data,

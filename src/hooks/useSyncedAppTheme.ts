@@ -17,7 +17,7 @@ export function useSyncedAppTheme(appTheme: AppTheme): 'dark' | 'light' {
       const root = document.documentElement
       root.dataset.appTheme = eff  // 使 html 标签变成类似<html data-app-theme="light" lang="zh-CN">这样的形式，方便在 CSS 中使用 [data-app-theme="light"] 选择器
       root.style.colorScheme = eff
-      window.zterm?.window?.setBackgroundColor?.(eff === 'light' ? '#ffffff' : '#0d1117')
+      window.zauterm?.window?.setBackgroundColor?.(eff === 'light' ? '#ffffff' : '#0d1117')
     }
     apply()
     if (appTheme !== 'auto') return undefined

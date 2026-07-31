@@ -20,8 +20,6 @@ pub struct SshConnectConfig {
     pub password: Option<String>,
     pub private_key: Option<String>,
     pub passphrase: Option<String>,
-    #[allow(dead_code)]
-    pub encoding: Option<String>,
     pub keepalive_interval: Option<u64>,
 }
 
@@ -50,10 +48,6 @@ impl SshConnectConfig {
                 .and_then(|x| x.as_str())
                 .map(|s| s.to_string())
                 .filter(|s| !s.is_empty()),
-            encoding: v
-                .get("encoding")
-                .and_then(|x| x.as_str())
-                .map(|s| s.to_string()),
             keepalive_interval: v.get("sshKeepaliveInterval").and_then(|x| x.as_u64()),
         }
     }
@@ -181,7 +175,7 @@ fn run_ssh_session(
             Err(e) => return Err(fail_ready(&mut ready_tx, e)),
         };
         let pass = config.passphrase.clone().unwrap_or_default();
-        let tmp = std::env::temp_dir().join(format!("zterm-key-{}.pem", id));
+        let tmp = std::env::temp_dir().join(format!("zauterm-key-{}.pem", id));
         if let Err(e) = std::fs::write(&tmp, &key_data) {
             return Err(fail_ready(&mut ready_tx, e.to_string()));
         }

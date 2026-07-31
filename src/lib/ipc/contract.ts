@@ -1,6 +1,6 @@
 /**
- * 主进程 ↔ 渲染进程 IPC 统一响应：{ success, content }；失败时另含 errorKnown
- * 前后端共用类型；主进程构造/识别见 electron/lib/ipcResponse.ts（ipcOk、isIpcError 等）
+ * 前端 ↔ Rust 后端 IPC 统一响应：{ success, content }；失败时另含 errorKnown
+ * 后端构造见 src-tauri/src/ipc.rs
  */
 
 /** IPC content 允许的 JSON 值（含结构化对象，如 SftpEntry[]、SerialPortInfo[]） */

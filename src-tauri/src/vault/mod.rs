@@ -11,9 +11,9 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const SERVICE: &str = "per.zhuhezhang.zterm";
+const SERVICE: &str = "zauterm";
 const MASTER_KEY_ACCOUNT: &str = "vault-master-key-v1";
-const VAULT_FILE: &str = "zterm-credentials-vault.json";
+const VAULT_FILE: &str = "zauterm-credentials-vault.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct VaultEntry {

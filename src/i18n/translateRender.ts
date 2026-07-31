@@ -1,4 +1,4 @@
-import { translate } from '../../shared/translate'
+import { translate } from '@/i18n/translate'
 import { APP, CREDENTIALS } from './components/App'
 import { CONNECT, CREDENTIAL } from './components/ConnectDialog'
 import { SETTINGS } from './components/SettingsDialog'

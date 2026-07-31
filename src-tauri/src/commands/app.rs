@@ -64,7 +64,7 @@ pub fn app_validate_log_directory(app: AppHandle, dir: String) -> Value {
 }
 
 #[tauri::command]
-pub fn app_validate_local_file_path(app: AppHandle, file_path: String, _kind: Option<String>) -> Value {
+pub fn app_validate_local_file_path(app: AppHandle, file_path: String, kind: Option<String>) -> Value {
     let app_data = match app.path().app_data_dir() {
         Ok(p) => p,
         Err(e) => return ipc_fail_msg(e.to_string()),
@@ -72,6 +72,12 @@ pub fn app_validate_local_file_path(app: AppHandle, file_path: String, _kind: Op
     let roots = collect_resolved_roots(&app_data);
     match validate_local_file_path(&file_path, &roots) {
         Ok(()) => ipc_ok_empty(),
+        Err(code) if code == "sftp.pathErrors.localDirDenied" => {
+            crate::ipc::ipc_fail_known_params(
+                &code,
+                json!({ "kind": kind.unwrap_or_else(|| "read".into()) }),
+            )
+        }
         Err(code) => ipc_fail_known(&code),
     }
 }

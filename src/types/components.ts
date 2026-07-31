@@ -1,5 +1,5 @@
 import type { CSSProperties, Dispatch, DragEvent, MouseEvent, ReactNode, RefObject, SetStateAction } from 'react'
-import type { TerminalFontFamilyKey } from '../../shared/terminalFonts'
+import type { TerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 import type { AppTheme, AppSettings } from './settings'
 import type {
   ActiveSession, SavedSession, SessionConfig, SessionFormValues, SessionTreeNode as TreeNode,

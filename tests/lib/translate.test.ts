@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { translate } from '../../shared/translate'
+import { translate } from '@/i18n/translate'
 
 describe('translate', () => {
   const MESSAGES = {

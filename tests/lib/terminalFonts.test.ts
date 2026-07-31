@@ -3,7 +3,7 @@ import {
   DEFAULT_TERMINAL_FONT_FAMILY,
   normalizeTerminalFontFamilyKey,
   resolveTerminalFontFamily,
-} from '../../shared/terminalFonts'
+} from '@/lib/terminal/terminalFonts'
 
 describe('terminalFonts', () => {
   it('normalizes known preset keys', () => {

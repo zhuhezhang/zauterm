@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, lazy, Suspense, memo } from 'react'
 import type { AppMainProps } from './types/components'
 import type { AppSettings, AppTheme } from './types/settings'
-import type { TerminalFontFamilyKey } from '../shared/terminalFonts'
+import type { TerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 import type { ActiveSession, TerminalClearFn, TerminalOpenSearchFn, TerminalTextGetter } from './types/session'
 import { I18nProvider } from '@/context/I18nContext'
 import { SessionProvider, useSession } from '@/context/SessionContext'

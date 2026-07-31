@@ -1,5 +1,5 @@
-import { DEFAULT_ALGORITHM_SELECTION } from '../../../shared/sshAlgorithmDefaults'
-import { DEFAULT_TERMINAL_FONT_FAMILY } from '../../../shared/terminalFonts'
+import { DEFAULT_ALGORITHM_SELECTION } from '@/lib/ssh/sshAlgorithmDefaults'
+import { DEFAULT_TERMINAL_FONT_FAMILY } from '@/lib/terminal/terminalFonts'
 import type { AppSettings } from '../../types/settings'
 
 /** 主界面左侧会话栏默认宽度（px），与 App 分割条逻辑一致 */

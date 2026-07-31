@@ -1,5 +1,5 @@
 import type { SessionFormValues, SessionType } from '../../types/session'
-import { DEFAULT_TERMINAL_ENCODING } from '../../../shared/terminalEncoding'
+import { DEFAULT_TERMINAL_ENCODING } from '@/lib/terminal/terminalEncoding'
 
 /** 端口最小值 */
 export const PORT_MIN = 0

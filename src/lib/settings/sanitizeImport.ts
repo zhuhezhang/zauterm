@@ -7,7 +7,7 @@ import {
   DEFAULT_SETTINGS, SSH_ALGORITHM_SECTION_KEYS, TERMINAL_SCROLLBACK_MIN, 
   TERMINAL_SCROLLBACK_MAX, SSH_KEEPALIVE_INTERVAL_MIN, SSH_KEEPALIVE_INTERVAL_MAX 
 } from './defaults'
-import { TERMINAL_FONT_FAMILY_OPTIONS } from '../../../shared/terminalFonts'
+import { TERMINAL_FONT_FAMILY_OPTIONS } from '@/lib/terminal/terminalFonts'
 import {
   clampSidebarWidthPx, clampTerminalScrollback, normalizeImportedLogPath, normalizeLoggingMode,
   clampSshKeepaliveInterval,
@@ -17,7 +17,7 @@ import {
   SSH_ALGORITHM_OPTION_POOL,
   type AlgorithmCategory,
   type AlgorithmPreferences,
-} from '../../../shared/sshAlgorithmDefaults'
+} from '@/lib/ssh/sshAlgorithmDefaults'
 
 /**
  * 判断是否为纯对象

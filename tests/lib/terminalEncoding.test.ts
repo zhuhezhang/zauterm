@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_TERMINAL_ENCODING,
   normalizeTerminalEncoding,
-} from '../../shared/terminalEncoding'
+} from '@/lib/terminal/terminalEncoding'
 
 describe('normalizeTerminalEncoding', () => {
   it('defaults to utf-8', () => {

@@ -3,7 +3,7 @@ import { useDismissOnEscape } from '@/hooks/useDismissOnEscape'
 import { I18nProvider, useI18n } from '@/context/I18nContext'
 import { alertIpcFailure } from '@/lib/ipc/formatIpcError'
 import { uiAlert, uiConfirm } from '@/lib/ui/nativeDialog'
-import { getZterm } from '@/lib/ipc/getZterm'
+import { getZauterm } from '@/lib/ipc/getZauterm'
 import { isIpcSuccess } from '@/lib/ipc/ipcResponse'
 import { exportSessions, saveSessions } from '@/store/sessionStore'
 import { reportSettingsImportResult } from '@/lib/settings/importWarnings'
@@ -12,7 +12,7 @@ import { createHighlightRuleId } from '@/lib/settings/highlightRules'
 import { buildSettingsFromForm } from '@/lib/settings/buildSettingsFromForm'
 import { clearAllVaultEntries } from '@/store/credentialsBridge'
 import { DEFAULT_SETTINGS, SSH_ALGORITHM_SECTION_KEYS } from '@/lib/settings/defaults'
-import { DEFAULT_ALGORITHM_SELECTION, type AlgorithmCategory } from '../../shared/sshAlgorithmDefaults'
+import { DEFAULT_ALGORITHM_SELECTION, type AlgorithmCategory } from '@/lib/ssh/sshAlgorithmDefaults'
 import { SETTINGS_SCHEMA, SETTINGS_TABS, SETTINGS_TAB_SECTION_IDS } from '@/lib/settings/schema'
 import { saveSettings, exportSettings } from '@/store/settingsStore'
 import { validateAndParseSettingsImportContent } from '@/lib/import/parseSettingsImport'
@@ -21,7 +21,7 @@ import { useSettingsHoverTip } from '@/hooks/useSettingsHoverTip'
 import SettingsGenericSection from './settings/SettingsGenericSection'
 import type { SettingsDialogProps } from '@/types/components'
 import type { AppSettings, AppTheme, HighlightRule } from '@/types/settings'
-import type { TerminalFontFamilyKey } from '../../shared/terminalFonts'
+import type { TerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 import type { SettingsActionKey, SettingsGenericSectionDef, SettingsTabKey } from '@/types/settings'
 import '../styles/dialog.css'
 import '../styles/settings.css'
@@ -53,7 +53,7 @@ function SettingsDialogContent({
     let cancelled = false
     ;(async () => {
       try {
-        const res = await window.zterm?.credentials?.isAvailable?.()
+        const res = await window.zauterm?.credentials?.isAvailable?.()
         if (cancelled) return
         setVaultEncryptionAvailable(isIpcSuccess(res) && res.content?.available === true)
       } catch {
@@ -238,7 +238,7 @@ function SettingsDialogContent({
   /** 处理导入设置的操作，从 JSON 文件导入设置并更新表单 */
   const handleImportSettings = async () => {
     try {
-      const picked = await getZterm().paths.chooseOpen('importSettings')
+      const picked = await getZauterm().paths.chooseOpen('importSettings')
       if (!picked?.success) {
         alertIpcFailure(t, picked, 'settings.importFail')
         return
@@ -286,8 +286,8 @@ function SettingsDialogContent({
       p.startsWith('\\') ||
       /^[a-zA-Z]:[\\/]/.test(p)
     try {
-      if (window.zterm?.paths?.validateLogDirectory && likelyAbsolute) {
-        const vr = await window.zterm.paths.validateLogDirectory(p)
+      if (window.zauterm?.paths?.validateLogDirectory && likelyAbsolute) {
+        const vr = await window.zauterm.paths.validateLogDirectory(p)
         if (alertIpcFailure(t, vr, 'settings.logPathRejected')) return
       }
       set('logPath', p)
@@ -299,8 +299,8 @@ function SettingsDialogContent({
   /** 处理选择日志路径的操作，兼容使用不同的 API 弹出目录选择对话框，选择后更新日志路径设置 */
   const handleChooseLogPath = async () => {
     try {
-      if (window.zterm?.paths?.chooseOpen) {
-        const picked = await window.zterm.paths.chooseOpen('logSave')
+      if (window.zauterm?.paths?.chooseOpen) {
+        const picked = await window.zauterm.paths.chooseOpen('logSave')
         if (isIpcSuccess(picked) && !picked?.content?.canceled) {
           const logPath = picked.content.path
           if (typeof logPath === 'string' && logPath) {
@@ -318,8 +318,8 @@ function SettingsDialogContent({
           const f = el.files?.[0]
           if (!f) return
           const diskPath =
-            typeof window.zterm?.paths?.getPathForFile === 'function'
-              ? window.zterm.paths.getPathForFile(f)
+            typeof window.zauterm?.paths?.getPathForFile === 'function'
+              ? window.zauterm.paths.getPathForFile(f)
               : (typeof f.path === 'string' ? f.path : '')
           if (!diskPath) return
           const dirPath = diskPath.replace(/[/\\][^/\\]*$/, '')
@@ -349,7 +349,7 @@ function SettingsDialogContent({
   const handleClearKnownHosts = async () => {
     if (!(await uiConfirm(t('settings.confirmClearKnownHosts')))) return
     try {
-      const res = await getZterm().others.clearKnownHosts()
+      const res = await getZauterm().others.clearKnownHosts()
       if (alertIpcFailure(t, res)) return
       void uiAlert(t('settings.clearedKnownHosts'))
     } catch (e) {

@@ -5,7 +5,7 @@
  */
 export function getLocalFilePath(file: File): string {
   if (!file) return ''
-  const bridge = window.zterm?.paths?.getPathForFile
+  const bridge = window.zauterm?.paths?.getPathForFile
   if (typeof bridge === 'function') {
     try {
       const p = bridge(file)

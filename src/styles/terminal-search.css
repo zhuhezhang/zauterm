@@ -45,7 +45,7 @@
   align-items: center;
   gap: 2px;
   font-size: 12px;
-  padding-left: 24px;
+  padding-left: 12px;
   color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
@@ -60,7 +60,7 @@
 }
 
 .terminal-search-toggle-regex {
-  padding-right: 10px;
+  padding-right: 5px;
 }
 
 .terminal-search-btn {

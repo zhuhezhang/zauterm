@@ -127,7 +127,7 @@ export function setupLogging(
     if (!pending) return
     const chunk = pending
     pending = ''
-    window.zterm?.log?.append?.(logDir, logFileName, chunk)
+    window.zauterm?.log?.append?.(logDir, logFileName, chunk)
   }
 
   /** 将数据追加到日志文件中 */
@@ -135,7 +135,7 @@ export function setupLogging(
     if (logKind !== 'stream') return
     if (chunk === '' || chunk == null) return
     if (typeof chunk !== 'string') return
-    if (!window.zterm?.log?.append) return
+    if (!window.zauterm?.log?.append) return
     const { text, carry } = stripAnsiForLogChunk(ansiCarry, chunk)
     ansiCarry = carry
     if (!text) return
@@ -153,17 +153,17 @@ export function setupLogging(
   const SNAPSHOT_DEBOUNCE_MS = 80
   /** 刷新快照 */
   const flushSnapshot = () => {
-    if (!window.zterm?.log?.write) return
+    if (!window.zauterm?.log?.write) return
     if (!terminal) return
     try {
-      window.zterm.log.write(logDir, logFileName, exportTerminalBuffer(terminal))
+      window.zauterm.log.write(logDir, logFileName, exportTerminalBuffer(terminal))
     } catch {}
   }
 
   /** 计划快照 */
   const scheduleSnapshot = () => {
     if (logKind !== 'buffer') return
-    if (!window.zterm?.log?.write) return
+    if (!window.zauterm?.log?.write) return
     if (!terminal) return
     if (snapshotTimer != null) {
       window.clearTimeout(snapshotTimer)

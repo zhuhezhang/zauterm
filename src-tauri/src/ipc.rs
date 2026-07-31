@@ -1,22 +1,5 @@
-#![allow(dead_code)]
-//! IPC response shape matching shared/ipc.ts
-use serde::Serialize;
+//! IPC response shape matching src/lib/ipc/contract.ts
 use serde_json::{Map, Value};
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IpcOk {
-    pub success: bool,
-    pub content: Value,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IpcFail {
-    pub success: bool,
-    pub error_known: bool,
-    pub content: Value,
-}
 
 pub fn ipc_ok(content: Value) -> Value {
     serde_json::json!({
@@ -46,6 +29,10 @@ pub fn ipc_fail(error: &str, error_known: bool, params: Option<Value>) -> Value 
 
 pub fn ipc_fail_known(code: &str) -> Value {
     ipc_fail(code, true, None)
+}
+
+pub fn ipc_fail_known_params(code: &str, params: Value) -> Value {
+    ipc_fail(code, true, Some(params))
 }
 
 pub fn ipc_fail_msg(msg: impl AsRef<str>) -> Value {

@@ -1,10 +1,10 @@
-/** 渲染进程 window.zterm API 契约（Tauri 实现见 src/lib/ipc/tauriZterm.ts） */
-import type { AlgorithmPreferences } from './sshAlgorithmDefaults.js'
-import type { IpcContent, IpcResult } from './ipc.js'
-import type { SftpEntry } from './others.js'
+/** 渲染进程 window.zauterm API 契约（Tauri 实现见 src/lib/ipc/tauriZauterm.ts） */
+import type { AlgorithmPreferences } from '../ssh/sshAlgorithmDefaults'
+import type { IpcContent, IpcResult } from './contract'
+import type { SftpEntry } from '../constants'
 
 /** 进度信息，用于 SFTP 上传 / 下载进度提示 */
-export interface ZTermProgress {
+export interface ZauTermProgress {
   /** 进度类型 */
   type?: string
   /** 已传输的字节数 */
@@ -112,7 +112,7 @@ export interface SerialPortInfo {
 }
 
 /** 窗口控制 API */
-export interface ZTermWindowApi {
+export interface ZauTermWindowApi {
   /** 最小化窗口 */
   minimize: () => void
   /** 最大化窗口 */
@@ -142,7 +142,7 @@ export interface ZTermWindowApi {
 }
 
 /** SSH 连接 API */
-export interface ZTermSshApi {
+export interface ZauTermSshApi {
   /** 
    * 连接 
    * @param id 会话 ID
@@ -185,7 +185,7 @@ export interface ZTermSshApi {
 }
 
 /** SFTP 连接 API */
-export interface ZTermSftpApi {
+export interface ZauTermSftpApi {
   /** 
    * 连接
    * @param id 会话 ID
@@ -264,11 +264,11 @@ export interface ZTermSftpApi {
    * @param id 会话 ID
    * @param cb 回调函数，参数为进度
    */
-  onProgress: (id: string, cb: (progress: ZTermProgress) => void) => () => void
+  onProgress: (id: string, cb: (progress: ZauTermProgress) => void) => () => void
 }
 
 /** Telnet 连接 API */
-export interface ZTermTelnetApi {
+export interface ZauTermTelnetApi {
   /** 
    * 连接
    * @param id 会话 ID
@@ -304,7 +304,7 @@ export interface ZTermTelnetApi {
 }
 
 /** 串口连接 API */
-export interface ZTermSerialApi {
+export interface ZauTermSerialApi {
   /** 
    * 列出串口端口
    * @returns 串口端口列表
@@ -345,7 +345,7 @@ export interface ZTermSerialApi {
 }
 
 /** 凭据 API */
-export interface ZTermCredentialsApi {
+export interface ZauTermCredentialsApi {
   /** 
    * 是否可用
    * @returns 是否可用
@@ -412,7 +412,7 @@ export type ChooseOpenResult = IpcContent & {
 }
 
 /** 本地路径 API */
-export interface ZTermPathsApi {
+export interface ZauTermPathsApi {
   /** 
    * 获取下载路径
    * @returns 下载路径
@@ -446,7 +446,7 @@ export interface ZTermPathsApi {
 }
 
 /** 保存 API */
-export interface ZTermSaveApi {
+export interface ZauTermSaveApi {
   /**
    * 另存为对话框并写入文件
    * @param kind 场景类型（terminalOutput / sessions / settings）
@@ -458,7 +458,7 @@ export interface ZTermSaveApi {
 }
 
 /** 日志 API */
-export interface ZTermLogApi {
+export interface ZauTermLogApi {
   /** 
    * 写入日志
    * @param logDir 日志目录
@@ -476,7 +476,7 @@ export interface ZTermLogApi {
 }
 
 /** 其它 API */
-export interface ZTermOthersApi {
+export interface ZauTermOthersApi {
   /** 
    * 设置 UI 语言
    * @param uiLanguage 语言
@@ -499,25 +499,25 @@ export interface ZTermOthersApi {
 }
 
 /** 主 API */
-export interface ZTermApi {
+export interface ZauTermApi {
   /** 本地路径 API */
-  paths: ZTermPathsApi
+  paths: ZauTermPathsApi
   /** 保存 API */
-  save: ZTermSaveApi
+  save: ZauTermSaveApi
   /** 其它 API */
-  others: ZTermOthersApi
+  others: ZauTermOthersApi
   /** 窗口控制 API */
-  window: ZTermWindowApi
+  window: ZauTermWindowApi
   /** 凭据 API */
-  credentials: ZTermCredentialsApi
+  credentials: ZauTermCredentialsApi
   /** 日志 API */
-  log: ZTermLogApi
+  log: ZauTermLogApi
   /** SSH API */
-  ssh: ZTermSshApi
+  ssh: ZauTermSshApi
   /** SFTP API */
-  sftp: ZTermSftpApi
+  sftp: ZauTermSftpApi
   /** Telnet API */
-  telnet: ZTermTelnetApi
+  telnet: ZauTermTelnetApi
   /** 串口 API */
-  serial: ZTermSerialApi
+  serial: ZauTermSerialApi
 }

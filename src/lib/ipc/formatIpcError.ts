@@ -1,6 +1,6 @@
 import type { TranslateFn } from '../../types/common'
 import type { IpcThrownError } from '../../types/common'
-import type { IpcResult } from '../../../shared/ipc'
+import type { IpcResult } from '@/lib/ipc/contract'
 import { ipcErrorFields, isIpcFailure } from './ipcResponse'
 import { uiAlert } from '@/lib/ui/nativeDialog'
 

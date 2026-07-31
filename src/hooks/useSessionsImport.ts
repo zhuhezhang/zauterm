@@ -3,7 +3,7 @@ import { useI18n } from '@/context/I18nContext'
 import { applySessionsImportFromContent, reportSessionsImportResult } from '@/lib/import/applySessionsImport'
 import { reportImportError } from '@/lib/import/handleImportErrors'
 import { alertIpcFailure } from '@/lib/ipc/formatIpcError'
-import { getZterm } from '@/lib/ipc/getZterm'
+import { getZauterm } from '@/lib/ipc/getZauterm'
 import { absorbPlaintextSecretsFromImportedSessions } from '@/store/credentialsBridge'
 import type { SavedSession } from '@/types/session'
 
@@ -21,7 +21,7 @@ export function useSessionsImport(
 
   const triggerImport = useCallback(async () => {
     try {
-      const picked = await getZterm().paths.chooseOpen('importSessions')
+      const picked = await getZauterm().paths.chooseOpen('importSessions')
       if (!picked?.success) {
         alertIpcFailure(t, picked, 'settings.importFail')
         return

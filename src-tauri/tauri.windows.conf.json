@@ -2,7 +2,7 @@
   "app": {
     "windows": [
       {
-        "title": "ZTerm",
+        "title": "ZauTerm",
         "width": 1440,
         "height": 850,
         "minWidth": 800,

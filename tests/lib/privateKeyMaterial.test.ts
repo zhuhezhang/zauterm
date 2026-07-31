@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isPrivateKeyFilePathInput,
   isPrivateKeyPemContent,
-} from '../../shared/privateKeyMaterial'
+} from '@/lib/ssh/privateKeyMaterial'
 
 const SAMPLE_PEM = `-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW

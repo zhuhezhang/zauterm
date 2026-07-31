@@ -1,7 +1,7 @@
 import SettingsSettingItem from './SettingsSettingItem'
 import SettingsAlgorithmSection from './SettingsAlgorithmSection'
 import SettingsHighlightSection from './SettingsHighlightSection'
-import type { AlgorithmCategory } from '../../../shared/sshAlgorithmDefaults'
+import type { AlgorithmCategory } from '@/lib/ssh/sshAlgorithmDefaults'
 import type { AppSettings, HighlightRule } from '@/types/settings'
 import type { SettingsActionKey, SettingsGenericSectionDef, SettingsSchemaItem } from '@/types/settings'
 import type { TranslateFn } from '@/types/common'

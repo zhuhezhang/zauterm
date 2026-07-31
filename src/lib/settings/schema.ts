@@ -1,5 +1,5 @@
 import { TERMINAL_SCROLLBACK_MIN, TERMINAL_SCROLLBACK_MAX, SSH_KEEPALIVE_INTERVAL_MIN, SSH_KEEPALIVE_INTERVAL_MAX } from './defaults'
-import { TERMINAL_FONT_FAMILY_OPTIONS } from '../../../shared/terminalFonts'
+import { TERMINAL_FONT_FAMILY_OPTIONS } from '@/lib/terminal/terminalFonts'
 
 /** 设置对话框标签页（labelKey 对应 settings.tabs.*） */
 export const SETTINGS_TABS = [

@@ -1,20 +1,21 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ZTerm",
+  "productName": "ZauTerm",
   "version": "3.2.9",
-  "identifier": "per.zhuhezhang.zterm",
+  "identifier": "zauterm",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
     "beforeBuildCommand": "npm run build",
-    "frontendDist": "../dist"
+    "frontendDist": "../dist",
+    "removeUnusedCommands": true
   },
   "app": {
     "withGlobalTauri": false,
     "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "ZTerm",
+        "title": "ZauTerm",
         "width": 1440,
         "height": 850,
         "minWidth": 800,
@@ -35,6 +36,12 @@
       }
     ],
     "security": {
+      "pattern": {
+        "use": "isolation",
+        "options": {
+          "dir": "../src-isolation"
+        }
+      },
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost; font-src 'self' data:; img-src 'self' data: blob:; worker-src 'self' blob:; base-uri 'self'"
     }
   },

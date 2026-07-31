@@ -1,8 +1,8 @@
-import type { VaultSecretPartial } from '../../shared/zterm-api.js'
+import type { VaultSecretPartial } from '@/lib/ipc/zauterm-api'
 import type { AppSettings } from '../types/settings'
 import type { SavedSession, SessionConfig, SshSavedSession } from '../types/session'
 import { isSshSession } from '../types/session'
-import type { IpcResult } from '../../shared/ipc'
+import type { IpcResult } from '@/lib/ipc/contract'
 import { vaultSecretsFromGetResponse } from '../lib/ipc/ipcResponse'
 
 /** 加密存储同步载荷（空对象表示不修改 vault） */
@@ -37,7 +37,7 @@ export async function syncSessionSecretsToVault(
   config: SessionConfig,
   settings: AppSettings,
 ): Promise<IpcResult | null> {
-  const api = window.zterm?.credentials
+  const api = window.zauterm?.credentials
   if (!savedId || typeof savedId !== 'string') return null
   if (!api?.sync || !settings.saveSecretsToVault) return null
   const partial = buildSecretsSyncPayload(config, settings)
@@ -51,7 +51,7 @@ export async function syncSessionSecretsToVault(
  * @returns 会话凭据
  */
 export async function fetchSessionSecrets(savedId: string): Promise<VaultSecretPartial> {
-  const api = window.zterm?.credentials
+  const api = window.zauterm?.credentials
   if (!savedId || !api?.get) return {}
   try {
     const res = await api.get(savedId)
@@ -77,7 +77,7 @@ export async function mergeSessionWithVaultSecrets<T extends SessionConfig>(sess
  * @param savedId 保存的 ID
  */
 export async function removeVaultEntry(savedId: string): Promise<void> {
-  await window.zterm?.credentials?.remove?.(savedId)
+  await window.zauterm?.credentials?.remove?.(savedId)
 }
 
 /**
@@ -86,14 +86,14 @@ export async function removeVaultEntry(savedId: string): Promise<void> {
  * @param toId 目标 ID
  */
 export async function duplicateVaultEntry(fromId: string, toId: string): Promise<void> {
-  await window.zterm?.credentials?.duplicate?.(fromId, toId)
+  await window.zauterm?.credentials?.duplicate?.(fromId, toId)
 }
 
 /**
  * 清空所有加密存储凭据
  */
 export async function clearAllVaultEntries(): Promise<void> {
-  await window.zterm?.credentials?.clearAll?.()
+  await window.zauterm?.credentials?.clearAll?.()
 }
 
 /**
@@ -106,7 +106,7 @@ export async function reapplyVaultPoliciesForAllSessions(
   settings: AppSettings,
 ): Promise<void> {
   if (!settings.saveSecretsToVault) return
-  const api = window.zterm?.credentials
+  const api = window.zauterm?.credentials
   if (!api?.get || !api?.sync) return
   const availRes = await api.isAvailable?.()
   if (!availRes?.success || availRes.content?.available === false) return
@@ -148,7 +148,7 @@ export function resolveAffectedSavedId(
 export async function absorbPlaintextSecretsFromImportedSessions(
   sessions: SavedSession[],
 ): Promise<SavedSession[]> {
-  const api = window.zterm?.credentials
+  const api = window.zauterm?.credentials
   const availRes = api?.isAvailable ? await api.isAvailable() : null
   const avail = availRes?.success && availRes.content?.available === true
   const out: SavedSession[] = []

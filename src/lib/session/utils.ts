@@ -17,7 +17,7 @@ import {
   getSessionFormDefaults,
 } from './defaults'
 import type { SerialStorageDefaults } from './defaults'
-import { INVALID_LABEL_CHARS } from '../../../shared/others'
+import { INVALID_LABEL_CHARS } from '@/lib/constants'
 import { hasInvalidLabelChars, hasInvalidGroupChars } from '../safeFileName'
 
 /**

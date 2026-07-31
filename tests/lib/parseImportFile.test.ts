@@ -15,7 +15,7 @@ const sampleSession: SavedSession = {
 describe('parseImportFile envelope', () => {
   it('buildExportEnvelope wraps data', () => {
     const env = buildExportEnvelope('sessions', [sampleSession])
-    expect(env.ztermExport).toBe('sessions')
+    expect(env.zautermExport).toBe('sessions')
     expect(env.version).toBe(EXPORT_ENVELOPE_VERSION)
     expect(env.data).toEqual([sampleSession])
   })
@@ -31,7 +31,7 @@ describe('parseImportFile envelope', () => {
   })
 
   it('unwrapExportPayload rejects bad version', () => {
-    const env = { ztermExport: 'sessions', version: 99, data: [] }
+    const env = { zautermExport: 'sessions', version: 99, data: [] }
     expect(() => unwrapExportPayload(env, 'sessions')).toThrow()
   })
 })

@@ -1,19 +1,19 @@
-import { DEFAULT_ALGORITHM_SELECTION } from '../../shared/sshAlgorithmDefaults'
+import { DEFAULT_ALGORITHM_SELECTION } from '@/lib/ssh/sshAlgorithmDefaults'
 import type { AppSettings } from '../types/settings'
 import type { TranslateFn } from '../types/common'
 import { syncUiLanguageToMain } from '../lib/resolveUiLanguage'
 import { downloadJsonExport } from '../lib/import/downloadJsonExport'
 import { DEFAULT_SETTINGS } from '../lib/settings/defaults'
-import { normalizeTerminalFontFamilyKey } from '../../shared/terminalFonts'
+import { normalizeTerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 import { ipcPathFromResponse } from '../lib/ipc/ipcResponse'
 import {
   clampSidebarWidthPx, clampTerminalScrollback, normalizeLoggingMode, clampSshKeepaliveInterval,
 } from '../lib/settings/normalize'
 
 /** 本地存储设置的键名 */
-const SETTINGS_KEY = 'zterm_settings'
+const SETTINGS_KEY = 'zauterm_settings'
 /** 默认放在系统下载目录下的日志子文件夹名 */
-export const LOG_PATH_SUBFOLDER = 'zterm-session-log'
+export const LOG_PATH_SUBFOLDER = 'zauterm-session-log'
 
 /** 由 app:getDownloadsPath invoke 填充的系统下载目录缓存 */
 let cachedDownloadsPath = ''
@@ -24,7 +24,7 @@ let cachedDownloadsPath = ''
  */
 export async function refreshDownloadsPathCache() {
   try {
-    const res = await window?.zterm?.paths?.getDownloadsPath?.()
+    const res = await window?.zauterm?.paths?.getDownloadsPath?.()
     cachedDownloadsPath = ipcPathFromResponse(res)
   } catch {
     cachedDownloadsPath = ''
@@ -53,7 +53,7 @@ function buildDefaultLogPathFromBase(base: string) {
 }
 
 /**
- * 默认日志目录：系统下载目录下的 zterm-session-log（需先 refreshDownloadsPathCache）
+ * 默认日志目录：系统下载目录下的 zauterm-session-log（需先 refreshDownloadsPathCache）
  * @returns 默认日志目录
  */
 export function getDefaultLogPath() {

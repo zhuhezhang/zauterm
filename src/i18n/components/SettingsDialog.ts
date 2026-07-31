@@ -65,7 +65,7 @@ export const SETTINGS = {
       },
       "logPath": {
         "label": "日志保存目录",
-        "desc": "留空则保存至系统下载目录下的「zterm-session-log」文件夹。须位于主目录、文稿、下载、桌面、音乐、图片、视频等用户目录下；Windows 还可选系统盘（通常为 C 盘）以外的整盘路径，Linux / macOS 还可选根分区以外的独立挂载点或外置卷（如 /mnt、/media、/Volumes 下路径），否则写入会被主进程拒绝"
+        "desc": "留空则保存至系统下载目录下的「zauterm-session-log」文件夹。须位于主目录、文稿、下载、桌面、音乐、图片、视频等用户目录下；Windows 还可选系统盘（通常为 C 盘）以外的整盘路径，Linux / macOS 还可选根分区以外的独立挂载点或外置卷（如 /mnt、/media、/Volumes 下路径），否则写入会被主进程拒绝"
       },
       "saveSecretsToVault": {
         "label": "保存敏感凭据到加密存储",
@@ -184,7 +184,7 @@ export const SETTINGS = {
       "fileTooLarge": "文件过大（上限 {max} MB）",
       "tooManySessions": "会话数量过多（上限 {max} 个）",
       "readFailed": "无法读取所选文件",
-      "wrongFileType": "文件类型不匹配，请选择 ZTerm 导出的{kind} JSON",
+      "wrongFileType": "文件类型不匹配，请选择 ZauTerm 导出的{kind} JSON",
       "unsupportedVersion": "不支持的导出文件版本（当前支持的版本为 {version}）",
       "invalidPayload": "文件内容格式无效",
       "noValidSessions": "文件中没有可导入的会话（共跳过 {skipped} 条无效记录）"
@@ -304,7 +304,7 @@ export const SETTINGS = {
       },
       "logPath": {
         "label": "Log directory",
-        "desc": "Empty = Downloads/zterm-session-log. Must be under user Home, Documents, Downloads, Desktop, Music, Pictures, Videos paths. On Windows you may also use a whole drive other than the system drive (usually C:). On Linux and macOS you may use separate mount points or external volumes outside the root filesystem (e.g. under /mnt, /media, or /Volumes). Other paths are rejected by the main process"
+        "desc": "Empty = Downloads/zauterm-session-log. Must be under user Home, Documents, Downloads, Desktop, Music, Pictures, Videos paths. On Windows you may also use a whole drive other than the system drive (usually C:). On Linux and macOS you may use separate mount points or external volumes outside the root filesystem (e.g. under /mnt, /media, or /Volumes). Other paths are rejected by the main process"
       },
       "saveSecretsToVault": {
         "label": "Save secrets to encrypted storage",
@@ -423,7 +423,7 @@ export const SETTINGS = {
       "fileTooLarge": "File is too large (max {max} MB)",
       "tooManySessions": "Too many sessions (max {max})",
       "readFailed": "Could not read the selected file",
-      "wrongFileType": "Wrong file type—use a ZTerm {kind} export JSON",
+      "wrongFileType": "Wrong file type—use a ZauTerm {kind} export JSON",
       "unsupportedVersion": "Unsupported export file version (current supported version is {version})",
       "invalidPayload": "Invalid file contents",
       "noValidSessions": "No importable sessions in file ({skipped} invalid record(s) skipped)"

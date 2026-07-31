@@ -1,6 +1,6 @@
-/** 渲染进程应用设置（localStorage）；algorithmPreferences 类型见 shared/sshAlgorithmDefaults */
-import type { AlgorithmPreferences } from '../../shared/sshAlgorithmDefaults'
-import type { TerminalFontFamilyKey } from '../../shared/terminalFonts'
+/** 渲染进程应用设置（localStorage）；algorithmPreferences 类型见 lib/ssh/sshAlgorithmDefaults */
+import type { AlgorithmPreferences } from '@/lib/ssh/sshAlgorithmDefaults'
+import type { TerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 
 /** 应用主题 */
 export type AppTheme = 'dark' | 'light' | 'auto'

@@ -1,5 +1,6 @@
 //! Open/save dialog scenarios
 
+use crate::ipc::{ipc_fail_known, ipc_fail_known_params, ipc_fail_msg, ipc_ok};
 use crate::path_policy::{assert_path_allowed, collect_resolved_roots};
 use serde_json::{json, Value};
 use std::fs;
@@ -12,47 +13,55 @@ fn path_to_string(p: tauri_plugin_dialog::FilePath) -> Option<String> {
     p.into_path().ok().map(|x| x.to_string_lossy().to_string())
 }
 
+fn path_denied(kind: &str) -> Value {
+    ipc_fail_known_params(
+        "sftp.pathErrors.localDirDenied",
+        json!({ "kind": kind }),
+    )
+}
+
 pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
     let app_data = match app.path().app_data_dir() {
         Ok(p) => p,
-        Err(e) => return crate::ipc::ipc_fail_msg(e.to_string()),
+        Err(e) => return ipc_fail_msg(e.to_string()),
     };
     let roots = collect_resolved_roots(&app_data);
 
     match kind {
         "logSave" | "sftpDownload" => {
+            let path_kind = if kind == "logSave" { "export" } else { "download" };
             let path = blocking_pick_folder(app).await;
             match path {
-                None => crate::ipc::ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })),
                 Some(p) => {
-                    if let Err(code) = assert_path_allowed(Path::new(&p), &roots, "sftp.pathErrors.localDirDenied") {
-                        return crate::ipc::ipc_fail_known(&code);
+                    if assert_path_allowed(Path::new(&p), &roots).is_err() {
+                        return path_denied(path_kind);
                     }
-                    crate::ipc::ipc_ok(json!({ "path": p }))
+                    ipc_ok(json!({ "path": p }))
                 }
             }
         }
         "sftpUploadFiles" => {
             let paths = blocking_pick_files(app).await;
             match paths {
-                None => crate::ipc::ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })),
                 Some(ps) => {
                     for p in &ps {
-                        if let Err(code) = assert_path_allowed(Path::new(p), &roots, "sftp.pathErrors.localFileDenied") {
-                            return crate::ipc::ipc_fail_known(&code);
+                        if assert_path_allowed(Path::new(p), &roots).is_err() {
+                            return path_denied("upload");
                         }
                     }
-                    crate::ipc::ipc_ok(json!({ "paths": ps }))
+                    ipc_ok(json!({ "paths": ps }))
                 }
             }
         }
         "sftpUploadFolder" => {
             let path = blocking_pick_folder(app).await;
             match path {
-                None => crate::ipc::ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })),
                 Some(dir) => {
-                    if let Err(code) = assert_path_allowed(Path::new(&dir), &roots, "sftp.pathErrors.localDirDenied") {
-                        return crate::ipc::ipc_fail_known(&code);
+                    if assert_path_allowed(Path::new(&dir), &roots).is_err() {
+                        return path_denied("upload");
                     }
                     let base = PathBuf::from(&dir);
                     // Match drag-drop collectEntryNodes: keep the selected folder name
@@ -82,47 +91,53 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
                         entries.push(json!({ "path": full, "relativePath": rel }));
                     }
                     if entries.is_empty() {
-                        return crate::ipc::ipc_ok(json!({ "canceled": true }));
+                        return ipc_ok(json!({ "canceled": true }));
                     }
-                    crate::ipc::ipc_ok(json!({ "entries": entries }))
+                    ipc_ok(json!({ "entries": entries }))
                 }
             }
         }
         "importSessions" | "importSettings" | "privateKey" => {
+            let path_kind = if kind == "privateKey" { "read" } else { "import" };
             let path = blocking_pick_file(app).await;
             match path {
-                None => crate::ipc::ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })),
                 Some(p) => {
-                    if let Err(code) = assert_path_allowed(Path::new(&p), &roots, "sftp.pathErrors.localFileDenied") {
-                        return crate::ipc::ipc_fail_known(&code);
+                    if assert_path_allowed(Path::new(&p), &roots).is_err() {
+                        return path_denied(path_kind);
                     }
                     match fs::read_to_string(&p) {
-                        Ok(content) => crate::ipc::ipc_ok(json!({ "content": content })),
-                        Err(e) => crate::ipc::ipc_fail_msg(e.to_string()),
+                        Ok(content) => ipc_ok(json!({ "content": content })),
+                        Err(e) => ipc_fail_msg(e.to_string()),
                     }
                 }
             }
         }
-        _ => crate::ipc::ipc_fail_known("app.invalidRequest"),
+        _ => ipc_fail_known("app.invalidRequest"),
     }
 }
 
 pub async fn save_file(app: &AppHandle, kind: &str, default_name: &str, content: &str) -> Value {
     let app_data = match app.path().app_data_dir() {
         Ok(p) => p,
-        Err(e) => return crate::ipc::ipc_fail_msg(e.to_string()),
+        Err(e) => return ipc_fail_msg(e.to_string()),
     };
     let roots = collect_resolved_roots(&app_data);
+    let path_kind = match kind {
+        "terminalOutput" => "saveOutput",
+        "sessions" | "settings" => "export",
+        _ => "export",
+    };
     let path = blocking_save_file(app, default_name, kind).await;
     match path {
-        None => crate::ipc::ipc_ok(json!({ "canceled": true })),
+        None => ipc_ok(json!({ "canceled": true })),
         Some(p) => {
-            if let Err(code) = assert_path_allowed(Path::new(&p), &roots, "sftp.pathErrors.localFileDenied") {
-                return crate::ipc::ipc_fail_known(&code);
+            if assert_path_allowed(Path::new(&p), &roots).is_err() {
+                return path_denied(path_kind);
             }
             match fs::write(&p, content) {
-                Ok(()) => crate::ipc::ipc_ok(json!({})),
-                Err(e) => crate::ipc::ipc_fail_msg(e.to_string()),
+                Ok(()) => ipc_ok(json!({})),
+                Err(e) => ipc_fail_msg(e.to_string()),
             }
         }
     }

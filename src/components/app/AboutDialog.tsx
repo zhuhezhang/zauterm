@@ -6,8 +6,8 @@ import '@/styles/about.css'
 
 /** 项目仓库地址 */
 const PROJECT_URLS = [
-  'https://github.com/zhuhezhang/zterm',
-  'https://gitee.com/zhuhezhang/zterm',
+  'https://github.com/zhuhezhang/zauterm',
+  'https://gitee.com/zhuhezhang/zauterm',
 ] as const
 
 /** 关于对话框 */
@@ -17,7 +17,7 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
   useDismissOnEscape(true, onClose)
 
   const openUrl = (url: string) => {
-    void window.zterm?.others?.openExternal?.(url)
+    void window.zauterm?.others?.openExternal?.(url)
   }
 
   return (
@@ -31,7 +31,7 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
         </div>
         <div className="dialog-body about-dialog-body">
           <div className="about-hero">
-            <span className="about-app-name">⚡ ZTerm</span>
+            <span className="about-app-name">⚡ ZauTerm</span>
             <span className="about-version">{version ? `v${version}` : '—'}</span>
           </div>
           <div className="about-row">

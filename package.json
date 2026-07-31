@@ -1,5 +1,5 @@
 {
-  "name": "zterm",
+  "name": "zauterm",
   "private": true,
   "version": "3.2.9",
   "description": "A cross-platform terminal emulator built with Tauri, React, and xterm.js, supporting SSH, SFTP, serial, and Telnet",
@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src shared"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",

@@ -5,7 +5,7 @@
 import {
   DEFAULT_TERMINAL_ENCODING,
   normalizeTerminalEncoding,
-} from '../../shared/terminalEncoding'
+} from '@/lib/terminal/terminalEncoding'
 
 /** 连接对话框编码下拉 */
 export const TERMINAL_ENCODING_OPTIONS = [

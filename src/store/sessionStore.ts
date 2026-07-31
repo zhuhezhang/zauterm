@@ -4,7 +4,7 @@ import { downloadJsonExport } from '../lib/import/downloadJsonExport'
 import { pickSessionStorageFields } from '../lib/session/utils'
 
 /** 保存的会话存储键 */
-const STORAGE_KEY = 'zterm_saved_sessions'
+const STORAGE_KEY = 'zauterm_saved_sessions'
 
 /**
  * 加载保存的会话
@@ -187,7 +187,7 @@ export async function exportSessions(
 
 
 /** 分组占位符存储键 */
-const PLACEHOLDER_KEY = '__zterm_group_placeholders__'
+const PLACEHOLDER_KEY = '__zauterm_group_placeholders__'
 
 /**
  * 加载分组占位符

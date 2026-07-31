@@ -10,7 +10,7 @@ export function useAppVersion(): string | null {
 
   useEffect(() => {
     let cancelled = false
-    void window.zterm?.others?.getVersion?.().then((res) => {
+    void window.zauterm?.others?.getVersion?.().then((res) => {
       if (cancelled || !isIpcSuccess(res)) return
       const v = res.content?.version
       if (typeof v === 'string' && v.trim()) setVersion(v.trim())

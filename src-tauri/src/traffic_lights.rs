@@ -1,13 +1,13 @@
 //! Vertically center macOS traffic lights within the custom 40px titlebar.
 
-/// Must match `.titlebar { height: 40px }` in `src/styles/titlebar.css`.
-pub const TITLEBAR_HEIGHT: f64 = 40.0;
-const TRAFFIC_LIGHT_X: f64 = 16.0;
-
 #[cfg(target_os = "macos")]
 pub fn center_traffic_lights(window: &tauri::WebviewWindow) {
     use objc2_app_kit::{NSWindow, NSWindowButton};
     use objc2_foundation::NSPoint;
+
+    /// Must match `.titlebar { height: 40px }` in `src/styles/titlebar.css`.
+    const TITLEBAR_HEIGHT: f64 = 40.0;
+    const TRAFFIC_LIGHT_X: f64 = 16.0;
 
     let Ok(ns_ptr) = window.ns_window() else {
         return;

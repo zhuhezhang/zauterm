@@ -1,6 +1,6 @@
 import type {
   SerialConnectConfig, SshConnectConfig, TelnetConnectConfig,
-} from '../../../shared/zterm-api'
+} from '@/lib/ipc/zauterm-api'
 import type { AppSettings } from '../../types/settings'
 import type { ActiveSshSession, ActiveTelnetSession, ActiveSerialSession } from '../../types/session'
 

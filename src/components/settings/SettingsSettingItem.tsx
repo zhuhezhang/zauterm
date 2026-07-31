@@ -54,11 +54,11 @@ export default function SettingsSettingItem({
     ? t(item.descKey, descParams)
     : (item.key ? t(`settings.fields.${item.key}.desc`, descParams) : '')
   const settingKey = item.key
-  /** 日志路径的显示值，如 '~/Downloads/zterm-session-log'、'~/Downloads/zterm-session-log'、'系统下载目录（默认）'等 */
+  /** 日志路径的显示值，如 '~/Downloads/zauterm-session-log'、'~/Downloads/zauterm-session-log'、'系统下载目录（默认）'等 */
   const logDisplay = (settingKey ? form[settingKey] : '') || getDefaultLogPath() || t('settings.logDefaultDir')
-  /** 日志路径的提示路径，如 '~/Downloads/zterm-session-log'、'~/Downloads/zterm-session-log'、'系统下载目录（默认）'等 */
+  /** 日志路径的提示路径，如 '~/Downloads/zauterm-session-log'、'~/Downloads/zauterm-session-log'、'系统下载目录（默认）'等 */
   const logTipPath = (settingKey ? form[settingKey] : '') || getDefaultLogPath() || t('settings.logDefaultDir')
-  /** 重置日志路径的提示文本，如 '恢复默认日志目录为：\n~/Downloads/zterm-session-log'等 */
+  /** 重置日志路径的提示文本，如 '恢复默认日志目录为：\n~/Downloads/zauterm-session-log'等 */
   const logResetTip = t('settings.logResetDefault', { path: getDefaultLogPath() || t('settings.logDefaultDir') })
   /** 日志路径是否禁用，如 true、false等 */
   const logPathDisabled = settingKey === 'logPath' && normalizeLoggingMode(form.loggingMode) === 'none'

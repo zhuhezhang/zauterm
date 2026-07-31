@@ -1,4 +1,4 @@
-import { INVALID_LABEL_CHARS } from '../../shared/others'
+import { INVALID_LABEL_CHARS } from '@/lib/constants'
 
 /** 分组名非法字符（/ 为路径分隔符，由首尾规则单独校验） */
 export const INVALID_GROUP_CHARS = new RegExp(`[\\\\:*?"\\u003c\\u003e|${String.fromCharCode(0)}]`)

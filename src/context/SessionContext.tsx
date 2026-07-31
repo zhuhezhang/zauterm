@@ -2,7 +2,7 @@ import { uiAlert } from '@/lib/ui/nativeDialog'
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from 'react'
 import type { AppSettings } from '@/types/settings'
 import { sessionEndpoint } from '@/types/session'
-import type { IpcResult } from '../../shared/ipc'
+import type { IpcResult } from '@/lib/ipc/contract'
 import { useI18n } from '@/context/I18nContext'
 import { alertIpcFailure } from '@/lib/ipc/formatIpcError'
 import { fileTimestamp } from '@/lib/util/fileTimestamp'
@@ -284,7 +284,7 @@ export function SessionProvider({
     const label = s?.label || `${s?.type?.toUpperCase?.() || 'SESSION'}_${(s && sessionEndpoint(s)) || s?.id || sessionId}`
     const filename = `${fileTimestamp()}_${safeFileToken(label)}.txt`
     try {
-      const res = await window.zterm?.save?.saveFile('terminalOutput', filename, text)
+      const res = await window.zauterm?.save?.saveFile('terminalOutput', filename, text)
       if (res?.content?.canceled) return
       if (alertIpcFailure(t, res, 'app.saveOutputFail')) return
       void uiAlert(t('app.saveOutputOk'))

@@ -1,5 +1,5 @@
 /** 跨模块共用的小型类型（i18n、导入、IPC 错误包装） */
-import type { IpcResult } from '../../shared/ipc'
+import type { IpcResult } from '@/lib/ipc/contract'
 import type { SavedSession } from './session'
 
 /** 用户界面语言 */
@@ -19,7 +19,7 @@ export interface I18nContextValue {
   t: TranslateFn
 }
 
-// 渲染进程 IPC 错误包装（底层契约见 shared/ipc.ts）
+// 渲染进程 IPC 错误包装（底层契约见 lib/ipc/contract.ts）
 
 /** 导入错误 */
 export interface ImportError extends Error {

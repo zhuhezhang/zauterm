@@ -1,7 +1,7 @@
-/** 标签名 / 文件名非法字符（含 /）；主进程路径校验与渲染进程 SFTP 等共用 */
+/** 标签名 / 文件名非法字符（含 /） */
 export const INVALID_LABEL_CHARS = new RegExp(`[/\\\\:*?"\\u003c\\u003e|${String.fromCharCode(0)}]`,)
 
-/** SFTP 目录项（主进程 / 渲染进程共用） */
+/** SFTP 目录项 */
 export interface SftpEntry {
   /** 文件名 */
   name: string

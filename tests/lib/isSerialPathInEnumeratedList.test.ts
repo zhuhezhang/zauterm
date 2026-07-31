@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isSerialPathInEnumeratedList } from '../../shared/isSerialPathInEnumeratedList'
+import { isSerialPathInEnumeratedList } from '@/lib/serial/isSerialPathInEnumeratedList'
 
 describe('isSerialPathInEnumeratedList', () => {
   it('returns false for empty path', () => {

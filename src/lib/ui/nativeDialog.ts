@@ -4,7 +4,7 @@
  */
 import { confirm as tauriConfirm, message as tauriMessage } from '@tauri-apps/plugin-dialog'
 
-const DEFAULT_TITLE = 'ZTerm'
+const DEFAULT_TITLE = 'ZauTerm'
 
 /** 确认对话框（Ok / Cancel），等价于 window.confirm */
 export async function uiConfirm(text: string, title = DEFAULT_TITLE): Promise<boolean> {

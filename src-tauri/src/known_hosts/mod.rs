@@ -1,8 +1,8 @@
 //! SSH known hosts store + trust dialogs (aligned with Electron sshKnownHosts)
 //! 信任主机信息和主机密钥存储路径
-//! mac 示例：/Users/zhuhezhang/Library/Application Support/per.zhuhezhang.zterm/*.json
-//! windows 示例：C:\Users\zhuhezhang\AppData\Roaming\per.zhuhezhang.zterm\*.json
-//! linux 示例：/home/zhuhezhang/.config/per.zhuhezhang.zterm/*.json
+//! mac 示例：/Users/zhuhezhang/Library/Application Support/zauterm/*.json
+//! windows 示例：C:\Users\zhuhezhang\AppData\Roaming\zauterm\*.json
+//! linux 示例：/home/zhuhezhang/.config/zauterm/*.json
 
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind, MessageDialogResult};
 use tokio::sync::Mutex as AsyncMutex;
 
-const FILE: &str = "zterm-known-hosts.json";
+const FILE: &str = "zauterm-known-hosts.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KnownHostsFile {

@@ -1,4 +1,4 @@
-/** Tauri backend bridge implementing window.zterm (ZTermApi) */
+/** Tauri backend bridge implementing window.zauterm (ZauTermApi) */
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import type {
@@ -10,15 +10,16 @@ import type {
   TelnetConnectConfig,
   VaultGetContent,
   VaultSecretPartial,
-  ZTermApi,
-  ZTermProgress,
+  ZauTermApi,
+  ZauTermProgress,
   SerialPortInfo,
-} from '../../../shared/zterm-api'
-import type { SftpEntry } from '../../../shared/others'
-import type { IpcResult } from '../../../shared/ipc'
+} from '@/lib/ipc/zauterm-api'
+import type { SftpEntry } from '@/lib/constants'
+import type { IpcResult } from '@/lib/ipc/contract'
+import { zoomWheelStep as stepWebviewZoom } from '@/lib/ui/webviewZoom'
 
 type SessionPayload = [string, string]
-type ProgressPayload = [string, ZTermProgress]
+type ProgressPayload = [string, ZauTermProgress]
 
 function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial') {
   const outputEvent = `${prefix}:output`
@@ -56,7 +57,7 @@ function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial') {
   }
 }
 
-export function createTauriZterm(): ZTermApi {
+export function createTauriZauterm(): ZauTermApi {
   const sshBase = createStreamBridge('ssh')
   const telnet = createStreamBridge('telnet')
   const serialBase = createStreamBridge('serial')
@@ -84,7 +85,7 @@ export function createTauriZterm(): ZTermApi {
       },
       isMaximized: () => invoke<IpcResult<{ maximized: boolean }>>('window_is_maximized'),
       zoomWheelStep: (deltaY: number) => {
-        void invoke('window_zoom_wheel_step', { deltaY })
+        stepWebviewZoom(deltaY)
       },
     },
 

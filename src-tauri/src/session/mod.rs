@@ -6,7 +6,6 @@ pub mod stream;
 
 use dashmap::DashMap;
 use std::sync::Arc;
-use tokio::sync::mpsc;
 
 pub type SessionId = String;
 
@@ -38,6 +37,3 @@ pub enum SessionCmd {
     Resize { cols: u32, rows: u32 },
     Disconnect,
 }
-
-#[allow(dead_code)]
-pub type CmdTx = mpsc::UnboundedSender<SessionCmd>;

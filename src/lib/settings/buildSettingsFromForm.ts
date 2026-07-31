@@ -1,7 +1,7 @@
 import type { AppSettings } from '../../types/settings'
 import { normalizeHighlightRulesForSave } from './highlightRules'
 import { clampTerminalScrollback, normalizeLoggingMode, clampSshKeepaliveInterval } from './normalize'
-import { normalizeTerminalFontFamilyKey } from '../../../shared/terminalFonts'
+import { normalizeTerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 
 /** 
  * 将设置表单转为可持久化的 AppSettings

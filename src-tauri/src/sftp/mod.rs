@@ -1,6 +1,5 @@
 //! SFTP via libssh2
 
-use crate::encoding::buffer_to_binary_wire;
 use crate::known_hosts;
 use crate::path_policy::{assert_path_allowed, collect_resolved_roots};
 use crate::session::sftp::{SftpCmd, SftpSessionHandle};
@@ -100,7 +99,7 @@ fn open_ssh_session(
         } else {
             std::fs::read_to_string(key_pem).map_err(|e| e.to_string())?
         };
-        let tmp = std::env::temp_dir().join(format!("zterm-sftp-key-{id}.pem"));
+        let tmp = std::env::temp_dir().join(format!("zauterm-sftp-key-{id}.pem"));
         std::fs::write(&tmp, &key_data).map_err(|e| e.to_string())?;
         let pass = config.passphrase.clone().unwrap_or_default();
         let res = sess.userauth_pubkey_file(
@@ -268,7 +267,7 @@ fn download_file(
     local: &str,
     roots: &[PathBuf],
 ) -> Result<(), String> {
-    assert_path_allowed(Path::new(local), roots, "sftp.pathErrors.localFileDenied")?;
+    assert_path_allowed(Path::new(local), roots)?;
     if let Some(parent) = Path::new(local).parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
@@ -297,7 +296,7 @@ fn upload_file(
     remote: &str,
     roots: &[PathBuf],
 ) -> Result<(), String> {
-    assert_path_allowed(Path::new(local), roots, "sftp.pathErrors.localFileDenied")?;
+    assert_path_allowed(Path::new(local), roots)?;
     ensure_remote_parent_dirs(sftp, remote)?;
     let mut local_file = std::fs::File::open(local).map_err(|e| e.to_string())?;
     let total = local_file.metadata().map(|m| m.len()).unwrap_or(0);
@@ -370,7 +369,7 @@ fn download_dir(
     local_dir: &str,
     roots: &[PathBuf],
 ) -> Result<(), String> {
-    assert_path_allowed(Path::new(local_dir), roots, "sftp.pathErrors.localDirDenied")?;
+    assert_path_allowed(Path::new(local_dir), roots)?;
     std::fs::create_dir_all(local_dir).map_err(|e| e.to_string())?;
     download_dir_rec(app, id, sftp, remote_dir, local_dir, roots)
 }
@@ -481,9 +480,4 @@ pub fn disconnect(state: &AppState, id: &str) {
     if let Some((_, sess)) = state.sftp.remove(id) {
         let _ = sess.cmd_tx.send(SftpCmd::Disconnect);
     }
-}
-
-#[allow(dead_code)]
-fn _wire(s: &[u8]) -> String {
-    buffer_to_binary_wire(s)
 }

@@ -1,5 +1,5 @@
 import type { NormalizeImportedSessionResult, SessionImportWarning } from '../../types/common'
-import { normalizeTerminalEncoding } from '../../../shared/terminalEncoding'
+import { normalizeTerminalEncoding } from '@/lib/terminal/terminalEncoding'
 import { TERMINAL_ENCODING_OPTIONS } from '../terminalEncodingService'
 import type { SerialStorageDefaults, SshStorageDefaults } from './defaults'
 import type {

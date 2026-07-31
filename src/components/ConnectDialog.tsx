@@ -3,14 +3,14 @@ import { useI18n } from '../context/I18nContext'
 import { useDismissOnEscape } from '@/hooks/useDismissOnEscape'
 import { ipcPortsFromResponse } from '@/lib/ipc/ipcResponse'
 import { fetchSessionSecrets } from '../store/credentialsBridge'
-import { DEFAULT_TERMINAL_ENCODING } from '../../shared/terminalEncoding'
+import { DEFAULT_TERMINAL_ENCODING } from '@/lib/terminal/terminalEncoding'
 import { TERMINAL_ENCODING_OPTIONS } from '../lib/terminalEncodingService'
 import FormRow from './connect/FormRow'
 import { PrivateKeyField } from './connect/PrivateKeyField'
 import SshForm from './connect/SshForm'
 import TelnetForm from './connect/TelnetForm'
 import SerialForm from './connect/SerialForm'
-import { isSerialPathInEnumeratedList } from '../../shared/isSerialPathInEnumeratedList'
+import { isSerialPathInEnumeratedList } from '@/lib/serial/isSerialPathInEnumeratedList'
 import type { ConnectDialogProps } from '../types/components'
 import type { ConnectCredDialogState } from '../types/components'
 import type { SessionConfig, SessionFormValues, SessionType } from '../types/session'
@@ -94,7 +94,7 @@ function ConnectDialog({
 
   /** 刷新串口列表，用于串口连接时选择串口设备 */
   const refreshSerialPorts = useCallback(() => {  // useCallback: 记忆化回调函数，避免重复创建回调函数，提高性能。当依赖项变化时，回调函数会被重新创建并记忆化
-    window.zterm?.serial.listPorts().then((res) => {
+    window.zauterm?.serial.listPorts().then((res) => {
       setPorts(ipcPortsFromResponse(res) as { path?: string }[])
     })
   }, [])
