@@ -1,4 +1,4 @@
-//! SFTP via libssh2
+//! SFTP 通过 libssh2 实现
 
 use crate::known_hosts;
 use crate::path_policy::{assert_path_allowed, collect_resolved_roots};
@@ -16,6 +16,14 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{mpsc, oneshot};
 
+/// 连接 SFTP 会话
+/// # 参数
+/// - app: 应用程序句柄
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - config: SSH 连接配置
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果连接成功则返回 Ok(())，否则返回 Err(String)
 pub async fn connect(
     app: AppHandle,
     state: Arc<AppState>,
@@ -43,6 +51,12 @@ pub async fn connect(
     }
 }
 
+/// 解析地址
+/// # 参数
+/// - host: 主机名或 IP 地址
+/// - port: 端口号
+/// # 返回
+/// 一个包含 Result<std::net::SocketAddr, String> 的异程结果，如果解析成功则返回 Ok(std::net::SocketAddr)，否则返回 Err(String)
 fn resolve_addr(host: &str, port: u16) -> Result<std::net::SocketAddr, String> {
     use std::net::ToSocketAddrs;
     format!("{host}:{port}")
@@ -52,10 +66,18 @@ fn resolve_addr(host: &str, port: u16) -> Result<std::net::SocketAddr, String> {
         .ok_or_else(|| "ssh.resolveFailed".into())
 }
 
+/// 打开 SSH 会话
+/// # 参数
+/// - app: 应用程序句柄
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - config: SSH 连接配置
+/// # 返回
+/// 一个包含 Result<Session, String> 的异程结果，如果打开成功则返回 Ok(Session)，否则返回 Err(String)
 fn open_ssh_session(
     app: &AppHandle,
     state: &Arc<AppState>,
-    id: &str,
+    _id: &str,
     config: &SshConnectConfig,
 ) -> Result<Session, String> {
     let addr = resolve_addr(&config.host, config.port)?;
@@ -94,22 +116,14 @@ fn open_ssh_session(
 
     let mut authed = false;
     if let Some(ref key_pem) = config.private_key {
-        let key_data = if key_pem.contains("BEGIN") {
-            key_pem.clone()
-        } else {
-            std::fs::read_to_string(key_pem).map_err(|e| e.to_string())?
-        };
-        let tmp = std::env::temp_dir().join(format!("zauterm-sftp-key-{id}.pem"));
-        std::fs::write(&tmp, &key_data).map_err(|e| e.to_string())?;
+        let key_data = crate::ssh_key::resolve_private_key_material(key_pem)?;
         let pass = config.passphrase.clone().unwrap_or_default();
-        let res = sess.userauth_pubkey_file(
-            &config.username,
-            None,
-            &tmp,
-            if pass.is_empty() { None } else { Some(&pass) },
-        );
-        let _ = std::fs::remove_file(&tmp);
-        if res.is_ok() && sess.authenticated() {
+        let pass_opt = if pass.is_empty() { None } else { Some(pass.as_str()) };
+        if sess
+            .userauth_pubkey_memory(&config.username, None, &key_data, pass_opt)
+            .is_ok()
+            && sess.authenticated()
+        {
             authed = true;
         }
     }
@@ -126,6 +140,16 @@ fn open_ssh_session(
     Ok(sess)
 }
 
+/// 运行 SFTP 会话
+/// # 参数
+/// - app: 应用程序句柄
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - config: SSH 连接配置
+/// - cmd_rx: 命令接收器
+/// - ready_tx: 准备发送器
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果运行成功则返回 Ok(())，否则返回 Err(String)
 fn run_sftp_session(
     app: AppHandle,
     state: Arc<AppState>,
@@ -217,6 +241,12 @@ fn run_sftp_session(
     Ok(())
 }
 
+/// 列出目录
+/// # 参数
+/// - sftp: SFTP 会话
+/// - remote_path: 远程路径
+/// # 返回
+/// 一个包含 Result<Value, String> 的异程结果，如果列出成功则返回 Ok(Value)，否则返回 Err(String)
 fn list_dir(sftp: &ssh2::Sftp, remote_path: &str) -> Result<Value, String> {
     let entries = sftp
         .readdir(Path::new(remote_path))
@@ -259,6 +289,16 @@ fn list_dir(sftp: &ssh2::Sftp, remote_path: &str) -> Result<Value, String> {
     Ok(json!({ "items": items }))
 }
 
+/// 下载文件
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - sftp: SFTP 会话
+/// - remote: 远程路径
+/// - local: 本地路径
+/// - roots: 根路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果下载成功则返回 Ok(())，否则返回 Err(String)
 fn download_file(
     app: &AppHandle,
     id: &str,
@@ -288,6 +328,16 @@ fn download_file(
     Ok(())
 }
 
+/// 上传文件
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - sftp: SFTP 会话
+/// - local: 本地路径
+/// - remote: 远程路径
+/// - roots: 根路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果上传成功则返回 Ok(())，否则返回 Err(String)
 fn upload_file(
     app: &AppHandle,
     id: &str,
@@ -317,6 +367,15 @@ fn upload_file(
     Ok(())
 }
 
+/// 上传字节
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - sftp: SFTP 会话
+/// - remote: 远程路径
+/// - data: 数据
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果上传成功则返回 Ok(())，否则返回 Err(String)
 fn upload_bytes(
     app: &AppHandle,
     id: &str,
@@ -339,7 +398,12 @@ fn upload_bytes(
     Ok(())
 }
 
-/// Create remote parent directories for `remote` (best-effort; ignore already-exists).
+/// 创建远程父目录
+/// # 参数
+/// - sftp: SFTP 会话
+/// - remote: 远程路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果创建成功则返回 Ok(())，否则返回 Err(String)
 fn ensure_remote_parent_dirs(sftp: &ssh2::Sftp, remote: &str) -> Result<(), String> {
     let remote = remote.replace('\\', "/");
     let parent = match remote.rsplit_once('/') {
@@ -361,6 +425,16 @@ fn ensure_remote_parent_dirs(sftp: &ssh2::Sftp, remote: &str) -> Result<(), Stri
     Ok(())
 }
 
+/// 下载目录
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - sftp: SFTP 会话
+/// - remote_dir: 远程目录
+/// - local_dir: 本地目录
+/// - roots: 根路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果下载成功则返回 Ok(())，否则返回 Err(String)
 fn download_dir(
     app: &AppHandle,
     id: &str,
@@ -374,6 +448,16 @@ fn download_dir(
     download_dir_rec(app, id, sftp, remote_dir, local_dir, roots)
 }
 
+/// 递归下载目录
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - sftp: SFTP 会话
+/// - remote_dir: 远程目录
+/// - local_dir: 本地目录
+/// - roots: 根路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果递归下载成功则返回 Ok(())，否则返回 Err(String)
 fn download_dir_rec(
     app: &AppHandle,
     id: &str,
@@ -419,6 +503,12 @@ fn download_dir_rec(
     Ok(())
 }
 
+/// 删除路径
+/// # 参数
+/// - sftp: SFTP 会话
+/// - remote_path: 远程路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果删除成功则返回 Ok(())，否则返回 Err(String)
 fn delete_path(sftp: &ssh2::Sftp, remote_path: &str) -> Result<(), String> {
     let path = Path::new(remote_path);
     let stat: FileStat = sftp.stat(path).map_err(|e| e.to_string())?;
@@ -439,6 +529,16 @@ fn delete_path(sftp: &ssh2::Sftp, remote_path: &str) -> Result<(), String> {
     }
 }
 
+/// 发送进度
+/// # 参数
+/// - app: 应用程序句柄
+/// - id: 会话 ID
+/// - typ: 类型
+/// - transferred: 已传输的字节数
+/// - total: 总字节数
+/// - file: 文件路径
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果发送成功则返回 Ok(())，否则返回 Err(String)
 fn emit_progress(app: &AppHandle, id: &str, typ: &str, transferred: u64, total: u64, file: &str) {
     let percent = if total > 0 {
         ((transferred as f64 / total as f64) * 100.0).round() as u64
@@ -460,6 +560,13 @@ fn emit_progress(app: &AppHandle, id: &str, typ: &str, transferred: u64, total: 
     );
 }
 
+/// 请求
+/// # 参数
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - build: 构建命令
+/// # 返回
+/// 一个包含 Result<T, String> 的异程结果，如果请求成功则返回 Ok(T)，否则返回 Err(String)
 pub async fn request<T, F>(state: &AppState, id: &str, build: F) -> Result<T, String>
 where
     T: Send + 'static,
@@ -476,6 +583,12 @@ where
     rx.await.map_err(|_| "sftp.notConnected".to_string())?
 }
 
+/// 断开连接
+/// # 参数
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// # 返回
+/// 一个包含 Result<(), String> 的异程结果，如果断开成功则返回 Ok(())，否则返回 Err(String)
 pub fn disconnect(state: &AppState, id: &str) {
     if let Some((_, sess)) = state.sftp.remove(id) {
         let _ = sess.cmd_tx.send(SftpCmd::Disconnect);

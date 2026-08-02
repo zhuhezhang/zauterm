@@ -37,8 +37,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 window.zauterm = createTauriZauterm()
-
-// Ctrl/Cmd + 滚轮、+/-/0 界面缩放（对齐 Electron webContents zoom）
 attachWebviewZoomShortcuts()
 
 /**

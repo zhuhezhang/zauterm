@@ -1,18 +1,45 @@
+//! 日志命令
+
 use crate::path_policy::{collect_resolved_roots, safe_file_stem, validate_log_directory};
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
+/// 写入日志
+/// # 参数
+/// - app: 应用
+/// - log_dir: 日志目录
+/// - session_id: 会话 ID
+/// - data: 数据
+/// # 返回
+/// 一个包含 Result 的写入日志
 #[tauri::command]
 pub fn log_write(app: AppHandle, log_dir: String, session_id: String, data: String) {
     write_log(&app, &log_dir, &session_id, &data, false);
 }
 
+/// 追加日志
+/// # 参数
+/// - app: 应用
+/// - log_dir: 日志目录
+/// - session_id: 会话 ID
+/// - data: 数据
+/// # 返回
+/// 一个包含 Result 的追加日志
 #[tauri::command]
 pub fn log_append(app: AppHandle, log_dir: String, session_id: String, data: String) {
     write_log(&app, &log_dir, &session_id, &data, true);
 }
 
+/// 写入日志
+/// # 参数
+/// - app: 应用
+/// - log_dir: 日志目录
+/// - session_id: 会话 ID
+/// - data: 数据
+/// - append: 是否追加
+/// # 返回
+/// 一个包含 Result 的写入日志
 fn write_log(app: &AppHandle, log_dir: &str, session_id: &str, data: &str, append: bool) {
     let Ok(app_data) = app.path().app_data_dir() else {
         return;

@@ -1,4 +1,4 @@
-/** Tauri backend bridge implementing window.zauterm (ZauTermApi) */
+// Tauri 后端桥接实现 window.zauterm (ZauTermApi)
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import type {
@@ -18,9 +18,16 @@ import type { SftpEntry } from '@/lib/constants'
 import type { IpcResult } from '@/lib/ipc/contract'
 import { zoomWheelStep as stepWebviewZoom } from '@/lib/ui/webviewZoom'
 
+/** 会话数据事件 payload */
 type SessionPayload = [string, string]
+/** 进度事件 payload */
 type ProgressPayload = [string, ZauTermProgress]
 
+/**
+ * 创建流桥接
+ * @param prefix 前缀：ssh、telnet、serial
+ * @returns 流桥接
+ */
 function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial') {
   const outputEvent = `${prefix}:output`
   const closedEvent = `${prefix}:closed`
@@ -57,6 +64,10 @@ function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial') {
   }
 }
 
+/**
+ * 创建 Tauri ZauTermApi
+ * @returns ZauTermApi 接口实现
+ */
 export function createTauriZauterm(): ZauTermApi {
   const sshBase = createStreamBridge('ssh')
   const telnet = createStreamBridge('telnet')

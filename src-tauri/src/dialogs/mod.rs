@@ -1,4 +1,4 @@
-//! Open/save dialog scenarios
+//! 打开/保存对话框场景
 
 use crate::ipc::{ipc_fail_known, ipc_fail_known_params, ipc_fail_msg, ipc_ok};
 use crate::path_policy::{assert_path_allowed, collect_resolved_roots};
@@ -9,10 +9,20 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 use walkdir::WalkDir;
 
+/// 路径转换为字符串
+/// # 参数
+/// - p: 路径
+/// # 返回
+/// 一个包含 String 的路径，如果成功则返回 Ok(String)，否则返回 None
 fn path_to_string(p: tauri_plugin_dialog::FilePath) -> Option<String> {
     p.into_path().ok().map(|x| x.to_string_lossy().to_string())
 }
 
+/// 路径拒绝
+/// # 参数
+/// - kind: 路径类型
+/// # 返回
+/// 一个包含 Value 的错误结果，如果成功则返回 Ok(Value)，否则返回 Err(String)
 fn path_denied(kind: &str) -> Value {
     ipc_fail_known_params(
         "sftp.pathErrors.localDirDenied",
@@ -20,6 +30,12 @@ fn path_denied(kind: &str) -> Value {
     )
 }
 
+/// 选择打开
+/// # 参数
+/// - app: 应用程序句柄
+/// - kind: 路径类型
+/// # 返回
+/// 一个包含 Value 的值，如果成功则返回 Ok(Value)，否则返回 Err(String)
 pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
     let app_data = match app.path().app_data_dir() {
         Ok(p) => p,
@@ -27,24 +43,24 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
     };
     let roots = collect_resolved_roots(&app_data);
 
-    match kind {
-        "logSave" | "sftpDownload" => {
+    match kind { // 匹配路径类型
+        "logSave" | "sftpDownload" => { // 匹配日志保存或SFTP下载
             let path_kind = if kind == "logSave" { "export" } else { "download" };
-            let path = blocking_pick_folder(app).await;
+            let path = blocking_pick_folder(app).await; // 选择文件夹
             match path {
-                None => ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })), // 取消
                 Some(p) => {
                     if assert_path_allowed(Path::new(&p), &roots).is_err() {
-                        return path_denied(path_kind);
+                        return path_denied(path_kind); // 路径拒绝
                     }
                     ipc_ok(json!({ "path": p }))
                 }
             }
         }
-        "sftpUploadFiles" => {
+        "sftpUploadFiles" => {  // 匹配SFTP上传文件
             let paths = blocking_pick_files(app).await;
             match paths {
-                None => ipc_ok(json!({ "canceled": true })),
+                None => ipc_ok(json!({ "canceled": true })), // 取消
                 Some(ps) => {
                     for p in &ps {
                         if assert_path_allowed(Path::new(p), &roots).is_err() {
@@ -55,7 +71,7 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
                 }
             }
         }
-        "sftpUploadFolder" => {
+        "sftpUploadFolder" => {  // 匹配SFTP上传文件夹
             let path = blocking_pick_folder(app).await;
             match path {
                 None => ipc_ok(json!({ "canceled": true })),
@@ -97,7 +113,7 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
                 }
             }
         }
-        "importSessions" | "importSettings" | "privateKey" => {
+        "importSessions" | "importSettings" | "privateKey" => {  // 匹配导入会话或设置或私钥
             let path_kind = if kind == "privateKey" { "read" } else { "import" };
             let path = blocking_pick_file(app).await;
             match path {
@@ -117,13 +133,21 @@ pub async fn choose_open(app: &AppHandle, kind: &str) -> Value {
     }
 }
 
+/// 保存文件
+/// # 参数
+/// - app: 应用程序句柄
+/// - kind: 路径类型
+/// - default_name: 默认名称
+/// - content: 内容
+/// # 返回
+/// 一个包含 Value 的值，如果成功则返回 Ok(Value)，否则返回 Err(String)
 pub async fn save_file(app: &AppHandle, kind: &str, default_name: &str, content: &str) -> Value {
-    let app_data = match app.path().app_data_dir() {
+    let app_data = match app.path().app_data_dir() { // 获取应用程序数据目录
         Ok(p) => p,
         Err(e) => return ipc_fail_msg(e.to_string()),
     };
-    let roots = collect_resolved_roots(&app_data);
-    let path_kind = match kind {
+    let roots = collect_resolved_roots(&app_data); // 收集解析的根路径
+    let path_kind = match kind { // 匹配路径类型
         "terminalOutput" => "saveOutput",
         "sessions" | "settings" => "export",
         _ => "export",
@@ -143,6 +167,11 @@ pub async fn save_file(app: &AppHandle, kind: &str, default_name: &str, content:
     }
 }
 
+/// 阻塞选择文件夹
+/// # 参数
+/// - app: 应用程序句柄
+/// # 返回
+/// 一个包含 Option<String> 的文件夹路径，如果成功则返回 Ok(Option<String>)，否则返回 Err(String)
 async fn blocking_pick_folder(app: &AppHandle) -> Option<String> {
     let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -153,6 +182,11 @@ async fn blocking_pick_folder(app: &AppHandle) -> Option<String> {
     .flatten()
 }
 
+/// 阻塞选择文件
+/// # 参数
+/// - app: 应用程序句柄
+/// # 返回
+/// 一个包含 Option<String> 的文件路径，如果成功则返回 Ok(Option<String>)，否则返回 Err(String)
 async fn blocking_pick_file(app: &AppHandle) -> Option<String> {
     let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -163,6 +197,11 @@ async fn blocking_pick_file(app: &AppHandle) -> Option<String> {
     .flatten()
 }
 
+/// 阻塞选择多个文件
+/// # 参数
+/// - app: 应用程序句柄
+/// # 返回
+/// 一个包含 Option<Vec<String>> 的文件路径列表，如果成功则返回 Ok(Option<Vec<String>>)，否则返回 Err(String)
 async fn blocking_pick_files(app: &AppHandle) -> Option<Vec<String>> {
     let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -175,6 +214,13 @@ async fn blocking_pick_files(app: &AppHandle) -> Option<Vec<String>> {
     .flatten()
 }
 
+/// 阻塞保存文件
+/// # 参数
+/// - app: 应用程序句柄
+/// - default_name: 默认名称
+/// - kind: 路径类型
+/// # 返回
+/// 一个包含 Option<String> 的文件路径，如果成功则返回 Ok(Option<String>)，否则返回 Err(String)
 async fn blocking_save_file(app: &AppHandle, default_name: &str, kind: &str) -> Option<String> {
     let app = app.clone();
     let default_name = default_name.to_string();

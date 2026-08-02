@@ -1,6 +1,9 @@
-mod commands;
+//! Zauterm 主库，包含所有功能模块和命令
+
+mod commands;  // Rust 的模块声明: 告诉编译器「crate 里有这些子模块」，并把它们挂到 lib.rs 这个库根上
 mod dialogs;
 mod encoding;
+mod invoke_commands;
 mod ipc;
 mod known_hosts;
 mod path_policy;
@@ -8,23 +11,25 @@ mod serial;
 mod session;
 mod sftp;
 mod ssh;
+mod ssh_key;
 mod telnet;
-mod vault;
 mod traffic_lights;
+mod vault;
 
 use session::AppState;
 use std::sync::Arc;
 use tauri::Manager;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[cfg_attr(mobile, tauri::mobile_entry_point)]  // 移动端的系统启动方式不同，不能靠普通 main；Tauri 需要这个宏把 run 接成正确的移动入口
 pub fn run() {
     let state = Arc::new(AppState::default());
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_opener::init())
-        .manage(state)
+        .plugin(tauri_plugin_dialog::init()) // 加载对话框插件（系统确认框/消息框）
+        .plugin(tauri_plugin_opener::init()) // 加载打开器插件（用系统浏览器打开 URL）
+        .plugin(tauri_plugin_clipboard_manager::init()) // 系统剪贴板（选中复制 / 右键粘贴）
+        .manage(state) // 管理应用状态（全局状态）
+        // 命令名称必须与 `invoke_commands::REGISTERED_INVOKE_COMMANDS` 和 `src-isolation/index.js` 保持同步
         .invoke_handler(tauri::generate_handler![
             commands::window::window_minimize,
             commands::window::window_maximize,
@@ -72,24 +77,24 @@ pub fn run() {
             commands::serial::serial_disconnect,
             commands::serial::serial_send_data,
         ])
-        .setup(|app| {
-            commands::window::attach_maximize_events(app.handle());
-            if let Ok(dir) = app.path().app_data_dir() {
-                let _ = std::fs::create_dir_all(&dir);
+        .setup(|app| { // 初始化设置应用（初始化窗口、创建数据目录等）
+            commands::window::attach_maximize_events(app.handle()); // 监听窗口最大化事件
+            if let Ok(dir) = app.path().app_data_dir() { // 获取应用数据目录，获取不到则跳过
+                let _ = std::fs::create_dir_all(&dir);  // 创建应用数据目录
             }
-            if let Some(win) = app.get_webview_window("main") {
-                traffic_lights::center_traffic_lights(&win);
+            if let Some(win) = app.get_webview_window("main") {  // 获取主窗口，用于调整macOS 红绿灯位置
+                traffic_lights::center_traffic_lights(&win);  // 第一次居中红绿灯位置
                 let win2 = win.clone();
                 std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_millis(120));
+                    std::thread::sleep(std::time::Duration::from_millis(120));  // 120ms后再次居中红绿灯位置（系统有时会稍后重排原生控件，延迟后再纠正，避免“闪一下又错位”）
                     let win3 = win2.clone();
-                    let _ = win2.run_on_main_thread(move || {
+                    let _ = win2.run_on_main_thread(move || {  // 在主线程上执行，避免在异步线程上执行导致UI不响应
                         traffic_lights::center_traffic_lights(&win3);
                     });
                 });
             }
-            Ok(())
+            Ok(())  // setup 返回 Ok(()) 表示初始化成功，否则会返回 Err(String) 表示初始化失败
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!())  // 创建窗口、进入事件循环，一直阻塞到应用退出
+        .expect("error while running tauri application");  // 如果运行失败，则打印错误信息
 }

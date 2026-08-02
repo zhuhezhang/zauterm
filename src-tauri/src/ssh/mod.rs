@@ -1,4 +1,4 @@
-//! SSH interactive shell via libssh2 (ssh2 crate)
+//! 通过 libssh2（ssh2 crate）实现 SSH 交互式 shell
 
 use crate::encoding::{buffer_to_binary_wire, encode_outgoing_terminal_data};
 use crate::known_hosts;
@@ -13,21 +13,37 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
 
+/// SSH连接配置
 pub struct SshConnectConfig {
+    /// 主机名或 IP 地址
     pub host: String,
+    /// 端口号
     pub port: u16,
+    /// 用户名
     pub username: String,
+    /// 密码
     pub password: Option<String>,
+    /// 私钥
     pub private_key: Option<String>,
+    /// 密码
     pub passphrase: Option<String>,
+    /// 心跳间隔时间
     pub keepalive_interval: Option<u64>,
 }
 
 impl SshConnectConfig {
+    /// 从 JSON 值创建 SSH 连接配置
     pub fn from_value(v: &Value) -> Self {
         Self {
-            host: v.get("host").and_then(|x| x.as_str()).unwrap_or("").to_string(),
-            port: v.get("port").and_then(|x| x.as_u64()).unwrap_or(22) as u16,
+            host: v
+                .get("host")
+                .and_then(|x| x.as_str())
+                .unwrap_or("")
+                .to_string(),
+            port: v
+                .get("port")
+                .and_then(|x| x.as_u64())
+                .unwrap_or(22) as u16,
             username: v
                 .get("username")
                 .and_then(|x| x.as_str())
@@ -53,6 +69,14 @@ impl SshConnectConfig {
     }
 }
 
+/// 连接到 SSH 服务器
+/// # 参数
+/// - app: 应用程序句柄
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - config: SSH 连接配置
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果连接成功则返回 Ok(())，否则返回 Err(String)
 pub async fn connect(
     app: AppHandle,
     state: Arc<AppState>,
@@ -80,18 +104,24 @@ pub async fn connect(
         }
     });
 
-    match ready_rx.await {
+    match ready_rx.await {  // 等待连接结果
         Ok(Ok(())) => {
-            state.ssh.insert(id, SshSessionHandle { cmd_tx });
+            state.ssh.insert(id, SshSessionHandle { cmd_tx });  // 插入会话句柄
             Ok(())
         }
-        Ok(Err(e)) => Err(e),
-        Err(_) => Err("ssh.connectFailed".into()),
+        Ok(Err(e)) => Err(e),  // 返回错误
+        Err(_) => Err("ssh.connectFailed".into()),  // 返回连接失败错误
     }
 }
 
+/// 解析地址
+/// # 参数
+/// - host: 主机名或 IP 地址
+/// - port: 端口号
+/// # 返回
+/// 一个包含 Result<std::net::SocketAddr, String> 的异步结果，如果解析成功则返回 Ok(std::net::SocketAddr)，否则返回 Err(String)
 fn resolve_addr(host: &str, port: u16) -> Result<std::net::SocketAddr, String> {
-    use std::net::ToSocketAddrs;
+    use std::net::ToSocketAddrs;  // 导入 ToSocketAddrs trait
     format!("{host}:{port}")
         .to_socket_addrs()
         .map_err(|e| e.to_string())?
@@ -99,16 +129,32 @@ fn resolve_addr(host: &str, port: u16) -> Result<std::net::SocketAddr, String> {
         .ok_or_else(|| "ssh.resolveFailed".into())
 }
 
+/// 失败准备
+/// # 参数
+/// - ready_tx: 准备发送器
+/// - msg: 错误信息
+/// # 返回
+/// 一个包含 String 的错误信息
 fn fail_ready(
     ready_tx: &mut Option<tokio::sync::oneshot::Sender<Result<(), String>>>,
     msg: String,
 ) -> String {
-    if let Some(tx) = ready_tx.take() {
+    if let Some(tx) = ready_tx.take() {  // 发送错误
         let _ = tx.send(Err(msg.clone()));
     }
     msg
 }
 
+/// 运行 SSH 会话
+/// # 参数
+/// - app: 应用程序句柄
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - config: SSH 连接配置
+/// - cmd_rx: 命令接收器
+/// - ready_tx: 准备发送器
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果会话成功则返回 Ok(())，否则返回 Err(String)
 fn run_ssh_session(
     app: AppHandle,
     state: Arc<AppState>,
@@ -117,21 +163,20 @@ fn run_ssh_session(
     mut cmd_rx: mpsc::UnboundedReceiver<SessionCmd>,
     ready_tx: tokio::sync::oneshot::Sender<Result<(), String>>,
 ) -> Result<(), String> {
-    let mut ready_tx = Some(ready_tx);
-    let addr = match resolve_addr(&config.host, config.port) {
+    let mut ready_tx = Some(ready_tx);  // 设置准备发送器
+    let addr = match resolve_addr(&config.host, config.port) {  // 解析地址
         Ok(a) => a,
-        Err(e) => return Err(fail_ready(&mut ready_tx, e)),
+        Err(e) => return Err(fail_ready(&mut ready_tx, e)),  // 返回错误
     };
-    let tcp = match TcpStream::connect_timeout(&addr, Duration::from_secs(15)) {
+    let tcp = match TcpStream::connect_timeout(&addr, Duration::from_secs(15)) {  // 连接到 TCP 流
         Ok(t) => t,
-        Err(e) => return Err(fail_ready(&mut ready_tx, e.to_string())),
+        Err(e) => return Err(fail_ready(&mut ready_tx, e.to_string())),  // 返回错误
     };
-    tcp.set_read_timeout(Some(Duration::from_millis(50))).ok();
-    tcp.set_write_timeout(Some(Duration::from_secs(30))).ok();
-
-    let mut sess = match Session::new() {
+    tcp.set_read_timeout(Some(Duration::from_millis(50))).ok();  // 设置读取超时时间
+    tcp.set_write_timeout(Some(Duration::from_secs(30))).ok();  // 设置写入超时时间
+    let mut sess = match Session::new() {  // 创建 SSH 会话
         Ok(s) => s,
-        Err(e) => return Err(fail_ready(&mut ready_tx, e.to_string())),
+        Err(e) => return Err(fail_ready(&mut ready_tx, e.to_string())),  // 返回错误
     };
     sess.set_tcp_stream(tcp);
     if let Err(e) = sess.handshake() {
@@ -170,23 +215,17 @@ fn run_ssh_session(
 
     let mut authed = false;
     if let Some(ref key_pem) = config.private_key {
-        let key_data = match resolve_private_key(key_pem) {
+        let key_data = match crate::ssh_key::resolve_private_key_material(key_pem) {
             Ok(k) => k,
             Err(e) => return Err(fail_ready(&mut ready_tx, e)),
         };
         let pass = config.passphrase.clone().unwrap_or_default();
-        let tmp = std::env::temp_dir().join(format!("zauterm-key-{}.pem", id));
-        if let Err(e) = std::fs::write(&tmp, &key_data) {
-            return Err(fail_ready(&mut ready_tx, e.to_string()));
-        }
-        let res = sess.userauth_pubkey_file(
-            &config.username,
-            None,
-            &tmp,
-            if pass.is_empty() { None } else { Some(&pass) },
-        );
-        let _ = std::fs::remove_file(&tmp);
-        if res.is_ok() && sess.authenticated() {
+        let pass_opt = if pass.is_empty() { None } else { Some(pass.as_str()) };
+        if sess
+            .userauth_pubkey_memory(&config.username, None, &key_data, pass_opt)
+            .is_ok()
+            && sess.authenticated()
+        {
             authed = true;
         }
     }
@@ -269,6 +308,14 @@ fn run_ssh_session(
     Ok(())
 }
 
+/// 发送数据
+/// # 参数
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - data: 数据
+/// - encoding: 编码
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果发送成功则返回 Ok(())，否则返回 Err(String)
 pub fn send_data(state: &AppState, id: &str, data: &str, encoding: Option<&str>) {
     if let Some(sess) = state.ssh.get(id) {
         let bytes = encode_outgoing_terminal_data(data, encoding);
@@ -276,22 +323,28 @@ pub fn send_data(state: &AppState, id: &str, data: &str, encoding: Option<&str>)
     }
 }
 
+/// 调整大小
+/// # 参数
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// - cols: 列数
+/// - rows: 行数
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果调整成功则返回 Ok(())，否则返回 Err(String)
 pub fn resize(state: &AppState, id: &str, cols: u32, rows: u32) {
     if let Some(sess) = state.ssh.get(id) {
         let _ = sess.cmd_tx.send(SessionCmd::Resize { cols, rows });
     }
 }
 
+/// 断开连接
+/// # 参数
+/// - state: 应用程序状态
+/// - id: 会话 ID
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果断开成功则返回 Ok(())，否则返回 Err(String)
 pub fn disconnect(state: &AppState, id: &str) {
     if let Some((_, sess)) = state.ssh.remove(id) {
         let _ = sess.cmd_tx.send(SessionCmd::Disconnect);
     }
-}
-
-fn resolve_private_key(key_or_path: &str) -> Result<String, String> {
-    let t = key_or_path.trim();
-    if t.contains("BEGIN") && t.contains("KEY") {
-        return Ok(t.to_string());
-    }
-    std::fs::read_to_string(t).map_err(|e| e.to_string())
 }

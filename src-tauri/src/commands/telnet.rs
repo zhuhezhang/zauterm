@@ -1,3 +1,5 @@
+//! Telnet 命令
+
 use crate::encoding::{buffer_to_binary_wire, encode_outgoing_terminal_data};
 use crate::ipc::{ipc_fail_known, ipc_fail_msg, ipc_ok_empty};
 use crate::session::stream::StreamSessionHandle;
@@ -11,6 +13,14 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 
+/// 连接 Telnet
+/// # 参数
+/// - app: 应用
+/// - state: 状态
+/// - id: 会话 ID
+/// - config: 配置
+/// # 返回
+/// 一个包含 Result 的连接 Telnet
 #[tauri::command]
 pub async fn telnet_connect(
     app: AppHandle,
@@ -89,6 +99,12 @@ pub async fn telnet_connect(
     Ok(ipc_ok_empty())
 }
 
+/// 断开 Telnet
+/// # 参数
+/// - state: 状态
+/// - id: 会话 ID
+/// # 返回
+/// 一个包含 Result 的断开 Telnet
 #[tauri::command]
 pub fn telnet_disconnect(state: State<'_, Arc<AppState>>, id: String) -> Value {
     if let Some((_, sess)) = state.telnet.remove(&id) {
@@ -97,6 +113,14 @@ pub fn telnet_disconnect(state: State<'_, Arc<AppState>>, id: String) -> Value {
     ipc_ok_empty()
 }
 
+/// 发送数据
+/// # 参数
+/// - state: 状态
+/// - id: 会话 ID
+/// - data: 数据
+/// - encoding: 编码
+/// # 返回
+/// 一个包含 Result 的发送数据
 #[tauri::command]
 pub fn telnet_send_data(
     state: State<'_, Arc<AppState>>,

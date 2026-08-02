@@ -1,3 +1,5 @@
+//! 串口命令
+
 use crate::encoding::{buffer_to_binary_wire, encode_outgoing_terminal_data};
 use crate::ipc::{ipc_fail_msg, ipc_ok, ipc_ok_empty};
 use crate::serial::{list_ports, parse_data_bits, parse_parity, parse_stop_bits};
@@ -11,6 +13,9 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, State};
 use tokio::sync::mpsc;
 
+/// 列出串口
+/// # 返回
+/// 一个包含串口的 Value
 #[tauri::command]
 pub fn serial_list_ports() -> Value {
     match list_ports() {
@@ -19,6 +24,14 @@ pub fn serial_list_ports() -> Value {
     }
 }
 
+/// 连接串口
+/// # 参数
+/// - app: 应用
+/// - state: 状态
+/// - id: 会话 ID
+/// - config: 配置
+/// # 返回
+/// 一个包含 Result 的连接串口
 #[tauri::command]
 pub async fn serial_connect(
     app: AppHandle,
@@ -43,8 +56,7 @@ pub async fn serial_connect(
         .unwrap_or("none")
         .to_string();
 
-    // validate enumerated
-    match list_ports() {
+    match list_ports() {  // 验证枚举的串口是否存在
         Ok(ports) if !ports.iter().any(|p| p.path == path) => {
             return Ok(ipc_fail_msg("serial.portNotFound"));
         }
@@ -52,22 +64,22 @@ pub async fn serial_connect(
         _ => {}
     }
 
-    if let Some((_, old)) = state.serial.remove(&id) {
+    if let Some((_, old)) = state.serial.remove(&id) {  // 断开旧的串口
         let _ = old.cmd_tx.send(SessionCmd::Disconnect);
     }
 
-    let builder = serialport::new(&path, baud)
+    let builder = serialport::new(&path, baud)  // 创建串口构建器
         .data_bits(parse_data_bits(data_bits))
         .stop_bits(parse_stop_bits(stop_bits))
         .parity(parse_parity(&parity))
         .timeout(Duration::from_millis(50));
 
-    let port = match builder.open() {
+    let port = match builder.open() {  // 打开串口
         Ok(p) => p,
         Err(e) => return Ok(ipc_fail_msg(e.to_string())),
     };
 
-    let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<SessionCmd>();
+    let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel::<SessionCmd>();  // 创建命令通道
     state
         .serial
         .insert(id.clone(), StreamSessionHandle { cmd_tx });
@@ -117,6 +129,12 @@ pub async fn serial_connect(
     Ok(ipc_ok_empty())
 }
 
+/// 断开串口
+/// # 参数
+/// - state: 状态
+/// - id: 会话 ID
+/// # 返回
+/// 一个包含 Result 的断开串口
 #[tauri::command]
 pub fn serial_disconnect(state: State<'_, Arc<AppState>>, id: String) -> Value {
     if let Some((_, sess)) = state.serial.remove(&id) {
@@ -125,6 +143,14 @@ pub fn serial_disconnect(state: State<'_, Arc<AppState>>, id: String) -> Value {
     ipc_ok_empty()
 }
 
+/// 发送数据
+/// # 参数
+/// - state: 状态
+/// - id: 会话 ID
+/// - data: 数据
+/// - encoding: 编码
+/// # 返回
+/// 一个包含 Result 的发送数据
 #[tauri::command]
 pub fn serial_send_data(
     state: State<'_, Arc<AppState>>,

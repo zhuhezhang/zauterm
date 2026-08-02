@@ -12,6 +12,7 @@ import { resolveEffectiveUiLanguage } from '../resolveUiLanguage'
 import { assertIpcSuccess } from '../ipc/ipcError'
 import { getZauterm } from '@/lib/ipc/getZauterm'
 import { formatThrownIpcError } from '@/lib/ipc/formatIpcError'
+import { readClipboardText, writeClipboardText } from '@/lib/ui/clipboard'
 import { getXtermTheme } from '../../theme/appTheme'
 import { pickSerialConnectConfig, pickSshConnectConfig, pickTelnetConnectConfig } from '../session/connectPayload'
 import { applyHighlightRules, nextLineBreakEndIndex } from './terminalHighlight'
@@ -90,7 +91,7 @@ export function applyTerminalSettings(
     if (!interact) return
     const sel = term.getSelection()
     if (sel && sel.length > 0) {
-      navigator.clipboard?.writeText(sel).catch(() => {})
+      void writeClipboardText(sel).catch(() => {})
     }
   })
 
@@ -109,8 +110,8 @@ export function applyTerminalSettings(
       if (!interact) return
       e.preventDefault()
       try {
-        const t = await navigator.clipboard.readText()
-        term.paste(t)
+        const t = await readClipboardText()
+        if (t) term.paste(t)
       } catch {}
     }
     ctxEl.addEventListener('contextmenu', ctxHandler)

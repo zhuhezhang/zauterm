@@ -1,16 +1,17 @@
-/** WebView 界面缩放（对齐 Electron webContents zoom level） */
+// WebView 界面缩放（对齐 Electron webContents zoom level）
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 
 /** Chromium/Electron zoom level：0 = 100%，每级约 ×1.2 */
 let zoomLevel = 0
-
 const ZOOM_LEVEL_MIN = -8
 const ZOOM_LEVEL_MAX = 9
 
+/** 计算缩放因子 */
 function zoomFactor(): number {
   return Math.pow(1.2, zoomLevel)
 }
 
+/** 应用缩放 */
 async function applyZoom(): Promise<void> {
   try {
     await getCurrentWebview().setZoom(zoomFactor())
@@ -19,18 +20,21 @@ async function applyZoom(): Promise<void> {
   }
 }
 
+/** 放大 */
 export function zoomIn(): void {
   if (zoomLevel >= ZOOM_LEVEL_MAX) return
   zoomLevel += 1
   void applyZoom()
 }
 
+/** 缩小 */
 export function zoomOut(): void {
   if (zoomLevel <= ZOOM_LEVEL_MIN) return
   zoomLevel -= 1
   void applyZoom()
 }
 
+/** 重置 */
 export function zoomReset(): void {
   zoomLevel = 0
   void applyZoom()
@@ -43,6 +47,7 @@ export function zoomWheelStep(deltaY: number): void {
   else zoomOut()
 }
 
+/** 是否是缩放修饰键 */
 function isZoomModifier(e: KeyboardEvent | WheelEvent): boolean {
   return e.metaKey || e.ctrlKey
 }

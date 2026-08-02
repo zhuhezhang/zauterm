@@ -1,3 +1,4 @@
+// 该文件是 Vitest 的配置文件，用于配置单元测试的运行环境、扫描范围、覆盖率等（释义参考vite.config.ts的注释）
 import { defineConfig } from 'vitest/config'
 import path from 'path'
 import { fileURLToPath } from 'url'
