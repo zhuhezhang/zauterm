@@ -5,12 +5,15 @@ export const SSH = {
     workerExitUnexpected: 'SSH 工作线程意外退出 ({code})',
     privateKeyInvalid: '私钥格式无效或文件不是支持的私钥',
     privateKeyReadFailed: '无法读取私钥文件：{path}',
+    emptyAlgorithms: 'SSH 算法偏好不完整：请至少为密钥交换、主机密钥、加密与 MAC 各选择一种算法',
   },
   en: {
     connectionFailed: 'SSH connection failed',
     workerExitUnexpected: 'SSH worker exited unexpectedly ({code})',
     privateKeyInvalid: 'Invalid private key format or unsupported key file',
     privateKeyReadFailed: 'Cannot read private key file: {path}',
+    emptyAlgorithms:
+      'SSH algorithm preferences incomplete: pick at least one algorithm each for key exchange, host key, cipher, and MAC',
   },
 }
 

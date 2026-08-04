@@ -1,4 +1,4 @@
-import { DEFAULT_ALGORITHM_SELECTION } from '@/lib/ssh/sshAlgorithmDefaults'
+import { sanitizeAlgorithmPreferences } from '@/lib/ssh/sshAlgorithmDefaults'
 import type { AppSettings } from '../types/settings'
 import type { TranslateFn } from '../types/common'
 import { syncUiLanguageToMain } from '../lib/resolveUiLanguage'
@@ -84,10 +84,7 @@ export function loadSettings(): AppSettings {
     const raw = localStorage.getItem(SETTINGS_KEY)
     const saved = raw ? JSON.parse(raw) : {}
     if (saved.algorithmPreferences && typeof saved.algorithmPreferences === 'object') {
-      saved.algorithmPreferences = {
-        ...DEFAULT_ALGORITHM_SELECTION,
-        ...saved.algorithmPreferences,
-      }
+      saved.algorithmPreferences = sanitizeAlgorithmPreferences(saved.algorithmPreferences)
     }
     let merged = { ...DEFAULT_SETTINGS, ...saved }
     merged.terminalScrollback = clampTerminalScrollback(merged.terminalScrollback)

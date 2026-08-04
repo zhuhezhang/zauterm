@@ -4,7 +4,7 @@ use crate::known_hosts;
 use crate::path_policy::{assert_path_allowed, collect_resolved_roots};
 use crate::session::sftp::{SftpCmd, SftpSessionHandle};
 use crate::session::AppState;
-use crate::ssh::SshConnectConfig;
+use crate::ssh::{self, SshConnectConfig};
 use serde_json::{json, Value};
 use ssh2::{FileStat, Session};
 use std::io::{Read, Write};
@@ -12,7 +12,7 @@ use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{mpsc, oneshot};
 
@@ -85,6 +85,7 @@ fn open_ssh_session(
     tcp.set_read_timeout(Some(Duration::from_secs(30))).ok();
     let mut sess = Session::new().map_err(|e| e.to_string())?;
     sess.set_tcp_stream(tcp);
+    ssh::prepare_session(&sess, config)?;
     sess.handshake().map_err(|e| e.to_string())?;
 
     let (host_key, host_key_type) = sess.host_key().ok_or_else(|| "ssh.noHostKey".to_string())?;
@@ -137,6 +138,7 @@ fn open_ssh_session(
     if !authed {
         return Err("ssh.authFailed".into());
     }
+    let _ = ssh::enable_keepalive(&sess, config);
     Ok(sess)
 }
 
@@ -165,6 +167,8 @@ fn run_sftp_session(
             return Err(e);
         }
     };
+    let keepalive_on = config.keepalive_interval.map(|s| s > 0).unwrap_or(false);
+    let mut next_keepalive = Instant::now();
     let sftp = match sess.sftp() {
         Ok(s) => s,
         Err(e) => {
@@ -178,7 +182,31 @@ fn run_sftp_session(
     let app_data = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
     let roots = collect_resolved_roots(&app_data);
 
-    while let Some(cmd) = cmd_rx.blocking_recv() {
+    loop {
+        let cmd = if keepalive_on {
+            match cmd_rx.try_recv() {
+                Ok(cmd) => cmd,
+                Err(mpsc::error::TryRecvError::Disconnected) => break,
+                Err(mpsc::error::TryRecvError::Empty) => {
+                    ssh::tick_keepalive(&sess, true, &mut next_keepalive);
+                    let wait = next_keepalive
+                        .saturating_duration_since(Instant::now())
+                        .min(Duration::from_millis(200));
+                    thread::sleep(if wait.is_zero() {
+                        Duration::from_millis(50)
+                    } else {
+                        wait
+                    });
+                    continue;
+                }
+            }
+        } else {
+            match cmd_rx.blocking_recv() {
+                Some(cmd) => cmd,
+                None => break,
+            }
+        };
+
         match cmd {
             SftpCmd::Disconnect => break,
             SftpCmd::List { remote_path, reply } => {

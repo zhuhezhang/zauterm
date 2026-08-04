@@ -1,11 +1,11 @@
 /**
- * SSH/SFTP 算法注册表与默认偏好（与 ssh2 `algorithms` 字段结构一致）
- * 前后端共用：设置 UI 选项池、弱算法判定、新建会话、重置默认、Worker 连接时使用
+ * SSH/SFTP 算法注册表与默认偏好（与本仓库绑定的 libssh2 / ssh2 crate 支持集对齐）
+ * 供设置 UI 选项池、弱算法判定、重置默认、连接 payload 使用
  */
 
 /** 单个 SSH 算法定义 */
 interface SshAlgorithmDefinition {
-  /** 算法标识名（ssh2 / OpenSSH 名称） */
+  /** 算法标识名（OpenSSH / libssh2 名称） */
   name: string
   /** 是否属于安全算法 */
   safe: boolean
@@ -13,7 +13,7 @@ interface SshAlgorithmDefinition {
   isDefault: boolean
 }
 
-/** SSH 算法类别键（kex / cipher 等），与设置 UI 及 ssh2 algorithms 字段一致 */
+/** SSH 算法类别键（kex / cipher 等），与设置 UI 及连接 payload 字段一致 */
 export type AlgorithmCategory = 'kex' | 'serverHostKey' | 'cipher' | 'hmac' | 'compress'
 
 /** 按类别索引的算法注册表 */
@@ -41,7 +41,8 @@ const weakDefault = (name: string): SshAlgorithmDefinition => ({ name, safe: fal
 const legacy = (name: string): SshAlgorithmDefinition => ({ name, safe: false, isDefault: false })
 
 /**
- * SSH 算法全集（默认 + 遗留）：优先 AEAD、EtM MAC、现代 KEX/主机密钥；
+ * SSH 算法全集（默认 + 遗留）：仅含 libssh2 可协商名称；
+ * 不含 OpenSSH 证书主机密钥、以及 blowfish/arcfour 等极少用的弱 cipher。
  * 遗留项用于兼容老旧服务端；weakDefault 为默认选中但标记为不安全的算法
  */
 export const DEFAULT_ALGORITHM_PREFERENCES: SshAlgorithmCatalog = {
@@ -55,8 +56,6 @@ export const DEFAULT_ALGORITHM_PREFERENCES: SshAlgorithmCatalog = {
     def('diffie-hellman-group16-sha512'),
     def('diffie-hellman-group14-sha256'),
     def('diffie-hellman-group-exchange-sha256'),
-    def('diffie-hellman-group15-sha512'),
-    def('diffie-hellman-group17-sha512'),
     weakDefault('diffie-hellman-group14-sha1'),
     weakDefault('diffie-hellman-group-exchange-sha1'),
     legacy('diffie-hellman-group1-sha1'),
@@ -72,13 +71,12 @@ export const DEFAULT_ALGORITHM_PREFERENCES: SshAlgorithmCatalog = {
     legacy('ssh-dss'),
   ],
   cipher: [
+    def('chacha20-poly1305@openssh.com'),
     def('aes128-gcm@openssh.com'),
     def('aes256-gcm@openssh.com'),
     def('aes128-ctr'),
     def('aes192-ctr'),
     def('aes256-ctr'),
-    def('aes128-gcm'),
-    def('aes256-gcm'),
     weakDefault('aes128-cbc'),
     legacy('aes192-cbc'),
     legacy('aes256-cbc'),
@@ -92,9 +90,8 @@ export const DEFAULT_ALGORITHM_PREFERENCES: SshAlgorithmCatalog = {
     def('hmac-sha2-512'),
     weakDefault('hmac-sha1'),
     legacy('hmac-md5'),
-    legacy('hmac-sha2-256-96'),
-    legacy('hmac-sha2-512-96'),
     legacy('hmac-ripemd160'),
+    legacy('hmac-ripemd160@openssh.com'),
     legacy('hmac-sha1-96'),
     legacy('hmac-md5-96'),
   ],
@@ -145,4 +142,33 @@ export function findSshAlgorithmDefinition(
 export function isWeakSshAlgorithm(category: AlgorithmCategory, name: string): boolean {
   const item = findSshAlgorithmDefinition(category, name)
   return item != null && !item.safe
+}
+
+/**
+ * 过滤算法偏好：去掉不在 libssh2 白名单内的名称。
+ * 显式空数组会保留（表示用户清空该类）；仅当原数组非空但全部非法时回退默认。
+ * @param prefs 原始偏好（如 localStorage）
+ * @returns 与选项池对齐后的偏好
+ */
+export function sanitizeAlgorithmPreferences(
+  prefs: Partial<AlgorithmPreferences> | null | undefined,
+): AlgorithmPreferences {
+  const out = {} as AlgorithmPreferences
+  for (const key of Object.keys(DEFAULT_ALGORITHM_SELECTION) as AlgorithmCategory[]) {
+    const raw = prefs?.[key]
+    if (!Array.isArray(raw)) {
+      out[key] = [...DEFAULT_ALGORITHM_SELECTION[key]]
+      continue
+    }
+    const pool = SSH_ALGORITHM_OPTION_POOL[key]
+    const unique = [...new Set(raw.filter((v): v is string => typeof v === 'string' && pool.includes(v)))]
+    if (unique.length > 0) {
+      out[key] = unique
+    } else if (raw.length === 0) {
+      out[key] = []
+    } else {
+      out[key] = [...DEFAULT_ALGORITHM_SELECTION[key]]
+    }
+  }
+  return out
 }

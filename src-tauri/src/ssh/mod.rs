@@ -1,15 +1,20 @@
 //! 通过 libssh2（ssh2 crate）实现 SSH 交互式 shell
 
+mod algorithms;
+
+pub use algorithms::AlgorithmPreferences;
+
 use crate::encoding::{buffer_to_binary_wire, encode_outgoing_terminal_data};
 use crate::known_hosts;
 use crate::session::{ssh::SshSessionHandle, AppState, SessionCmd};
+use algorithms::{apply_algorithm_preferences, parse_algorithms};
 use serde_json::Value;
 use ssh2::Session;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
 
@@ -27,8 +32,10 @@ pub struct SshConnectConfig {
     pub private_key: Option<String>,
     /// 密码
     pub passphrase: Option<String>,
-    /// 心跳间隔时间
+    /// 心跳间隔时间（秒，0 / None = 关闭）
     pub keepalive_interval: Option<u64>,
+    /// SSH 算法偏好（设置 UI → 连接 payload `algorithms`）
+    pub algorithms: Option<AlgorithmPreferences>,
 }
 
 impl SshConnectConfig {
@@ -65,6 +72,57 @@ impl SshConnectConfig {
                 .map(|s| s.to_string())
                 .filter(|s| !s.is_empty()),
             keepalive_interval: v.get("sshKeepaliveInterval").and_then(|x| x.as_u64()),
+            algorithms: parse_algorithms(v),
+        }
+    }
+}
+
+/// 在 handshake 前应用算法偏好
+/// # 参数
+/// - sess: SSH 会话
+/// - config: SSH 连接配置
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果应用成功则返回 Ok(())，否则返回 Err(String)
+pub fn prepare_session(sess: &Session, config: &SshConnectConfig) -> Result<(), String> {
+    if let Some(ref prefs) = config.algorithms {
+        apply_algorithm_preferences(sess, prefs)?;
+    }
+    Ok(())
+}
+
+/// 认证成功后配置 keepalive（非阻塞会话须在循环中调用 keepalive_send）
+/// # 参数
+/// - sess: SSH 会话
+/// - config: SSH 连接配置
+/// # 返回
+/// 一个包含 bool 的布尔值，如果启用成功则返回 true，否则返回 false
+pub fn enable_keepalive(sess: &Session, config: &SshConnectConfig) -> bool {
+    if let Some(secs) = config.keepalive_interval {
+        if secs > 0 {
+            sess.set_keepalive(true, secs as u32);
+            return true;
+        }
+    }
+    false
+}
+
+/// 按需发送 keepalive；返回下次应再检查的时刻
+/// # 参数
+/// - sess: SSH 会话
+/// - enabled: 是否启用 keepalive
+/// - next_at: 下次应再检查的时刻
+/// # 返回
+/// 一个包含 Result<(), String> 的异步结果，如果发送成功则返回 Ok(())，否则返回 Err(String)
+pub fn tick_keepalive(sess: &Session, enabled: bool, next_at: &mut Instant) {
+    if !enabled || Instant::now() < *next_at {
+        return;
+    }
+    match sess.keepalive_send() {
+        Ok(wait_secs) => {
+            *next_at = Instant::now() + Duration::from_secs(u64::from(wait_secs.max(1)));
+        }
+        Err(_) => {
+            *next_at = Instant::now() + Duration::from_secs(5);
         }
     }
 }
@@ -179,6 +237,9 @@ fn run_ssh_session(
         Err(e) => return Err(fail_ready(&mut ready_tx, e.to_string())),  // 返回错误
     };
     sess.set_tcp_stream(tcp);
+    if let Err(e) = prepare_session(&sess, &config) {
+        return Err(fail_ready(&mut ready_tx, e));
+    }
     if let Err(e) = sess.handshake() {
         return Err(fail_ready(&mut ready_tx, e.to_string()));
     }
@@ -241,11 +302,8 @@ fn run_ssh_session(
         return Err(fail_ready(&mut ready_tx, "ssh.authFailed".into()));
     }
 
-    if let Some(secs) = config.keepalive_interval {
-        if secs > 0 {
-            sess.set_keepalive(true, secs as u32);
-        }
-    }
+    let keepalive_on = enable_keepalive(&sess, &config);
+    let mut next_keepalive = Instant::now();
 
     let mut channel = match sess.channel_session() {
         Ok(c) => c,
@@ -282,6 +340,8 @@ fn run_ssh_session(
                 }
             }
         }
+
+        tick_keepalive(&sess, keepalive_on, &mut next_keepalive);
 
         match channel.read(&mut buf) {
             Ok(0) => {
@@ -346,5 +406,36 @@ pub fn resize(state: &AppState, id: &str, cols: u32, rows: u32) {
 pub fn disconnect(state: &AppState, id: &str) {
     if let Some((_, sess)) = state.ssh.remove(id) {
         let _ = sess.cmd_tx.send(SessionCmd::Disconnect);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    /// 测试从 JSON 值创建 SSH 连接配置
+    #[test]
+    fn from_value_parses_algorithms_and_keepalive() {
+        let v = json!({
+            "host": "example.com",
+            "port": 2222,
+            "username": "u",
+            "sshKeepaliveInterval": 30,
+            "algorithms": {
+                "kex": ["curve25519-sha256"],
+                "serverHostKey": ["ssh-ed25519"],
+                "cipher": ["chacha20-poly1305@openssh.com"],
+                "hmac": ["hmac-sha2-256"],
+                "compress": ["none"]
+            }
+        });
+        let cfg = SshConnectConfig::from_value(&v);
+        assert_eq!(cfg.host, "example.com");
+        assert_eq!(cfg.port, 2222);
+        assert_eq!(cfg.keepalive_interval, Some(30));
+        let alg = cfg.algorithms.expect("algorithms");
+        assert_eq!(alg.kex, vec!["curve25519-sha256"]);
+        assert_eq!(alg.cipher, vec!["chacha20-poly1305@openssh.com"]);
     }
 }

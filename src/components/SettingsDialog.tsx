@@ -152,7 +152,7 @@ function SettingsDialogContent({
   /**
    * 切换算法选项，根据算法类别和选项值更新表单中的算法偏好设置
    * @param type 算法类别，例如 'kex'、'serverHostKey'、'cipher'、'hmac'、'compress'
-   * @param value 要切换的算法选项值，例如 'curve25519-sha256'、'ssh-ed25519'、'aes128-gcm'、'hmac-sha2-256'、'zlib'
+   * @param value 要切换的算法选项值，例如 'curve25519-sha256'、'ssh-ed25519'、'aes128-gcm@openssh.com'、'hmac-sha2-256'、'zlib'
    */
   const toggleAlgorithmOption = (type: AlgorithmCategory, value: string) => {
     setForm(prev => {
@@ -169,7 +169,7 @@ function SettingsDialogContent({
   /**
    * 移动算法选项，根据算法类别和选项值更新表单中的算法偏好设置
    * @param type 算法类别，例如 'kex'、'serverHostKey'、'cipher'、'hmac'、'compress'
-   * @param value 要移动的算法选项值，例如 'curve25519-sha256'、'ssh-ed25519'、'aes128-gcm'、'hmac-sha2-256'、'zlib'
+   * @param value 要移动的算法选项值，例如 'curve25519-sha256'、'ssh-ed25519'、'aes128-gcm@openssh.com'、'hmac-sha2-256'、'zlib'
    * @param direction 移动方向，-1 表示向上移动，1 表示向下移动
    */
   const moveAlgorithmOption = (type: AlgorithmCategory, value: string, direction: number) => {
