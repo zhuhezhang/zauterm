@@ -1,6 +1,6 @@
 # ZauTerm
 
-简体中文 · **[English](README.md)** · v3.2.9
+简体中文 · **[English](README.md)** · v3.3.0
 
 ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌面终端模拟器。支持 **SSH**、**SFTP**、**Telnet** 与 **串口（Serial）** 连接，并提供会话保存、层级分组、加密凭据存储，以及自定义界面（覆盖式标题栏、深色/浅色主题、中英双语）。
 
@@ -257,7 +257,11 @@ Windows 上 Tauri 没有官方 portable 目标；构建脚本会把 `target/rele
 
 仅重新执行重命名：`npm run rename:artifacts`。
 
-版本号在 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json` 中保持一致（当前 **3.2.9**）。
+版本号需在 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、`README.md`、`README.zh-CN.md` 五处保持一致，可用：
+
+```bash
+npm run mod:ver -- x.x.x
+```
 
 ---
 

@@ -5722,7 +5722,7 @@ dependencies = [
 
 [[package]]
 name = "zauterm"
-version = "3.2.9"
+version = "3.3.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

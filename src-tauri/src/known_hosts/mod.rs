@@ -415,14 +415,13 @@ pub async fn verify_host_key_with_lang(
         }
     }
 
-    // 创建信任复制
+    // 创建信任复制。两边统一 Warning + 挂主窗口，避免 macOS 上 Info/Error 系统弹窗位置不一致。
     let copy = TrustCopy::from_lang(lang);
     let choice = if let Some(ref rec) = existing {
         prompt_three_way(
             app,
             copy.changed_title(),
             &copy.changed_message(&hp, &key_type, &rec.fingerprint, &fp),
-            MessageDialogKind::Error,
             copy.changed_buttons(),
         )
         .await
@@ -431,7 +430,6 @@ pub async fn verify_host_key_with_lang(
             app,
             copy.unknown_title(),
             &copy.unknown_message(&hp, &key_type, &fp),
-            MessageDialogKind::Info,
             copy.unknown_buttons(),
         )
         .await
@@ -480,7 +478,6 @@ fn already_trusted(state: &KnownHostsState, hp: &str, fp: &str) -> bool {
 /// - app: 应用程序句柄
 /// - title: 标题
 /// - message: 消息
-/// - kind: 消息类型
 /// - buttons: 按钮
 /// # 返回
 /// 一个包含 TrustChoice 的提示三种方式
@@ -488,7 +485,6 @@ async fn prompt_three_way(
     app: &AppHandle,
     title: &str,
     message: &str,
-    kind: MessageDialogKind,
     buttons: (String, String, String),
 ) -> TrustChoice {
     let app = app.clone();  // 克隆应用程序句柄
@@ -499,16 +495,20 @@ async fn prompt_three_way(
     let no_match = no_label.clone();  // 克隆 no 标签
 
     let result = tauri::async_runtime::spawn_blocking(move || {  // 异步运行时启动阻塞
-        app.dialog()
+        let mut builder = app
+            .dialog()
             .message(&message)
             .title(&title)
-            .kind(kind)
+            .kind(MessageDialogKind::Warning)
             .buttons(MessageDialogButtons::YesNoCancelCustom(
                 yes_label,
                 no_label,
                 cancel_label,
-            ))
-            .blocking_show_with_result()
+            ));
+        if let Some(win) = app.get_webview_window("main") {
+            builder = builder.parent(&win);
+        }
+        builder.blocking_show_with_result()
     })
     .await
     .unwrap_or(MessageDialogResult::Cancel);

@@ -1,7 +1,7 @@
 {
   "name": "zauterm",
   "private": true,
-  "version": "3.2.9",
+  "version": "3.3.0",
   "description": "A cross-platform terminal emulator built with Tauri, React, and xterm.js, supporting SSH, SFTP, serial, and Telnet",
   "type": "module",
   "homepage": "https://github.com/zhuhezhang/zauterm",
@@ -15,6 +15,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build && node scripts/rename-tauri-artifacts.mjs",
     "rename:artifacts": "node scripts/rename-tauri-artifacts.mjs",
+    "mod:ver": "node scripts/modify-project-version.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",

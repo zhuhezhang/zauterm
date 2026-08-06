@@ -199,6 +199,16 @@ export async function connectSession(
   const writeSuccess = (m: string) => writelnWithLog(term, logFileRef, `\r\x1b[32m${m}\x1b[0m`)
   const terminalErr = (e: unknown) => formatThrownIpcError((p, params) => translateRender(L(), p, params), e)  // errorKnown:false 直出原文; true 则按 error 路径走 i18n
 
+  // 首次连接 / 按 R 重连都走这里：先切到 connecting，标签页状态点才会呼吸
+  const wasEnded =
+    session.status === 'disconnected' ||
+    session.status === 'error' ||
+    session.status === 'reconnecting'
+  onUpdate({
+    status: wasEnded ? 'reconnecting' : 'connecting',
+    sftpReady: false,
+  })
+
   /** 提示按 R 重连并标记为可重连状态 */
   const showReconnectHint = () => {
     writeInfo(`\x1b[2m${translateRender(L(), 'terminal.pressR')}\x1b[0m`)

@@ -1,6 +1,6 @@
 # ZauTerm
 
-**[简体中文](README.zh-CN.md)** · English · v3.2.9
+**[简体中文](README.zh-CN.md)** · English · v3.3.0
 
 ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **React**, and **xterm.js**. It supports **SSH**, **SFTP**, **Telnet**, and **Serial** connections, with saved sessions, hierarchical grouping, encrypted credential storage, and a polished custom UI (overlay title bar, dark/light themes, bilingual interface).
 
@@ -257,7 +257,11 @@ The main binary / app bundle name is **`ZauTerm`** (`mainBinaryName` in `tauri.c
 
 Re-run renaming only (if needed): `npm run rename:artifacts`.
 
-Version is kept in sync across `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json` (currently **3.2.9**).
+Keep the version in sync across `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `README.md`, and `README.zh-CN.md`:
+
+```bash
+npm run mod:ver -- x.x.x
+```
 
 ---
 
