@@ -1,8 +1,8 @@
 # ZauTerm
 
-**[简体中文](README.zh-CN.md)** · English · v3.3.0
+**[简体中文](README.zh-CN.md)** · English · v3.3.1
 
-ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **React**, and **xterm.js**. It supports **SSH**, **SFTP**, **Telnet**, and **Serial** connections, with saved sessions, hierarchical grouping, encrypted credential storage, and a polished custom UI (overlay title bar, dark/light themes, bilingual interface).
+ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **React**, and **xterm.js**. It supports **SSH**, **SFTP**, **Telnet**, **Serial**, and **Local** (native shell) connections, with saved sessions, hierarchical grouping, encrypted credential storage, and a polished custom UI (overlay title bar, dark/light themes, bilingual interface).
 
 > Successor to the Electron-based [ZenTerm](https://github.com/zhuhezhang/zenterm) app: same product features, Rust/Tauri backend.
 
@@ -37,12 +37,13 @@ ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **
 | **SFTP**   | File browser in the sidebar: list, upload, download, mkdir, rename, delete; progress events; local paths restricted to safe user directories |
 | **Telnet** | Raw TCP Telnet client                                                                                                                        |
 | **Serial** | Local serial ports via `serialport` (baud rate, data/stop bits, parity); port list must be chosen from enumerated devices                    |
+| **Local**  | Native interactive shell via `portable-pty` (Unix PTY / Windows ConPTY); optional shell path and working directory (defaults: `$SHELL` / `COMSPEC`, home dir); PTY resize |
 
 ### Session management
 
 - Save sessions with **label**, **group** (hierarchical paths), and connection parameters
 - **Empty group placeholders** — create folder-like groups before adding sessions
-- **Search** saved sessions by name, host, or serial path (**Ctrl/Cmd+F**)
+- **Search** saved sessions by name, host, serial path, or local shell (**Ctrl/Cmd+F**)
 - **Duplicate**, **rename**, **edit**, **delete** sessions; optional confirm dialogs
 - **Export / import** session lists (JSON envelope, v1); import from **Settings** or the **sidebar**
 - **Connect**, **Save & connect**, or **Save only** from the connection dialog
@@ -54,7 +55,7 @@ ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **
 - **Press R to reconnect** after a session disconnects or an initial connection fails
 - **In-terminal search**: incremental find with match highlighting; **case sensitive**, **whole word**, and **regex** modes; prev/next navigation; open via tab context menu or **Ctrl/Cmd+Shift+F**
 - **Character encodings**: UTF-8, GBK, GB18030, GB2312, Big5, UTF-16 LE, Latin-1 (Rust `encoding_rs` on the backend; `TextDecoder` in the webview)
-- **Backspace mode** (per session): Auto (DEL for SSH, BS for Telnet/Serial), or force DEL / BS
+- **Backspace mode** (per session): Auto (DEL for SSH/Local, BS for Telnet/Serial), or force DEL / BS
 - **Terminal interaction**: select-to-copy and right-click paste (toggle in settings)
 - **Output highlighting**: regex rules with colors (defaults for error/success/warning/IP)
 - **Tab bar**: new connection, close tab/others/left/right/all, clear screen, save terminal output to file
@@ -74,7 +75,7 @@ ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **
 - Capabilities use **least privilege** (no broad `fs:` / `opener:` frontend permissions)
 - **SSH host key verification** (`zauterm-known-hosts.json`); prompts on first connect and fingerprint change
 - Optional **encrypted vault** for passwords and keys (ChaCha20-Poly1305; master key in OS keyring)
-- **Local path policy** for logs and SFTP: home, Documents, Downloads, Desktop, Music/Pictures/Videos, app data; on Windows, non-system drive roots (e.g. `D:\`) are also allowed
+- **Local path policy** for logs, SFTP, and Local session working directories: home, Documents, Downloads, Desktop, Music/Pictures/Videos, app data; on Windows, non-system drive roots (e.g. `D:\`) are also allowed
 
 ---
 
@@ -110,7 +111,7 @@ Global shortcuts work when ZauTerm is focused. On macOS use **Cmd**; on Windows 
 | Layer         | Technology                                      |
 | ------------- | ----------------------------------------------- |
 | Desktop shell | Tauri 2                                         |
-| Backend       | Rust (`ssh2`, `serialport`, `encoding_rs`, …)   |
+| Backend       | Rust (`ssh2`, `serialport`, `portable-pty`, `encoding_rs`, …) |
 | Frontend      | TypeScript, React 19, Vite 6                    |
 | Terminal      | @xterm/xterm 5, Fit / Web Links / Search addons |
 | Crypto        | ChaCha20-Poly1305 + OS keyring                  |
@@ -126,7 +127,7 @@ Source is organized as **frontend / Rust backend / isolation hook**:
 | Directory | Role | Description |
 |-----------|------|-------------|
 | **`src/`** | Frontend | React webview: UI, xterm, localStorage, `window.zauterm` bridge |
-| **`src-tauri/`** | Backend | Tauri/Rust: commands, SSH/SFTP/Telnet/Serial, vault, path policy |
+| **`src-tauri/`** | Backend | Tauri/Rust: commands, SSH/SFTP/Telnet/Serial/Local, vault, path policy |
 | **`src-isolation/`** | IPC gate | Isolation hook allowlisting invoke commands |
 
 ```
@@ -141,8 +142,8 @@ zauterm/
 ├── src-tauri/                           # Backend (Rust)
 │   ├── src/
 │   │   ├── lib.rs, main.rs              # App entry, generate_handler!
-│   │   ├── commands/                    # window / app / log / credentials / ssh / sftp / telnet / serial
-│   │   ├── ssh/, sftp/, telnet/, serial/
+│   │   ├── commands/                    # window / app / log / credentials / ssh / sftp / telnet / serial / local
+│   │   ├── ssh/, sftp/, telnet/, serial/, local/
 │   │   ├── path_policy/, known_hosts/, vault/
 │   │   ├── invoke_commands.rs           # Canonical IPC command list (synced with isolation)
 │   │   ├── ssh_key.rs                   # In-memory pubkey auth
@@ -172,7 +173,7 @@ Frontend src/ (React / xterm)
     ▼
 Backend src-tauri/ (commands + protocol modules)
     ▼
-Remote host / local serial / OS keyring
+Remote host / local serial / local shell (PTY) / OS keyring
 ```
 
 ---
@@ -291,7 +292,7 @@ Exported **sessions** and **settings** use a versioned JSON envelope (max file s
 2. **Least-privilege capabilities**: `capabilities/default.json` grants only needed window/event/dialog permissions—not broad filesystem/opener defaults.
 3. **SSH MITM mitigation**: Host keys are recorded; unknown or changed fingerprints require confirmation in a native dialog.
 4. **Private keys in memory**: SSH/SFTP pubkey auth uses `userauth_pubkey_memory` (no temp PEM files under `/tmp`).
-5. **Path sandboxing**: Session logs and SFTP local paths must resolve under allowed user folders or app data (plus Windows non-system drive roots).
+5. **Path sandboxing**: Session logs, SFTP local paths, and Local session working directories must resolve under allowed user folders or app data (plus Windows non-system drive roots).
 6. **Serial safety**: Connect only accepts paths returned by `listPorts` (refreshed list).
 7. **Credential vault**: Secrets encrypted with ChaCha20-Poly1305; master key stored via OS keyring (`keyring` crate).
 
@@ -327,6 +328,7 @@ Typical **app data** paths:
 | Garbled Chinese output | Set session encoding to **GBK** or **GB18030** |
 | SFTP “path not allowed” | Choose a directory under Downloads/Documents/home, not system paths |
 | Serial port not listed | Click **Refresh**; on Linux ensure user is in `dialout` group |
+| Local shell fails to start | Leave Shell empty for the system default (`$SHELL` / `COMSPEC`); ensure a custom path exists; pick a working directory under your home folder |
 | Host key prompt every time | Check write permissions for app data; do not run from read-only profiles |
 | Import fails / wrong file type | Use the correct export file (`sessions` vs `settings`); max 8 MB |
 | Isolation / invoke blocked | New commands must be added to `lib.rs`, `invoke_commands.rs`, and `src-isolation/index.js` |

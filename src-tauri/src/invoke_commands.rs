@@ -51,6 +51,10 @@ pub const REGISTERED_INVOKE_COMMANDS: &[&str] = &[
     "serial_connect",
     "serial_disconnect",
     "serial_send_data",
+    "local_connect",
+    "local_disconnect",
+    "local_send_data",
+    "local_resize",
 ];
 
 /// 插件 IPC 命令，前端被允许通过隔离钩子调用

@@ -119,6 +119,8 @@
 
 .welcome-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   z-index: 1;
 }

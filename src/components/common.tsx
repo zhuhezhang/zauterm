@@ -3,4 +3,5 @@ export const ConnectionTypeIcon = {
   ssh: '⌨',
   telnet: '🔌',
   serial: '⚡',
+  local: '💻',
 }

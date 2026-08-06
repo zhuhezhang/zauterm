@@ -93,6 +93,22 @@ export interface SerialConnectConfig {
   backspaceMode?: string
 }
 
+/** 本机 Shell 连接配置 */
+export interface LocalConnectConfig {
+  /** Shell 可执行文件路径（空则系统默认） */
+  shell?: string
+  /** 工作目录（空则用户家目录） */
+  cwd?: string
+  /** 编码 */
+  encoding?: string
+  /** 退格模式 */
+  backspaceMode?: string
+  /** 初始列数 */
+  cols?: number
+  /** 初始行数 */
+  rows?: number
+}
+
 /** 串口端口信息 */
 export interface SerialPortInfo {
   /** 路径 */
@@ -344,6 +360,49 @@ export interface ZauTermSerialApi {
   onClose: (id: string, cb: () => void) => () => void
 }
 
+/** 本机 Shell 连接 API */
+export interface ZauTermLocalApi {
+  /**
+   * 连接
+   * @param id 会话 ID
+   * @param config 连接配置
+   * @returns 连接结果
+   */
+  connect: (id: string, config: LocalConnectConfig) => Promise<IpcResult>
+  /**
+   * 断开连接
+   * @param id 会话 ID
+   * @returns 断开连接结果
+   */
+  disconnect: (id: string) => Promise<IpcResult>
+  /**
+   * 发送数据
+   * @param id 会话 ID
+   * @param data 数据
+   * @param encoding 编码
+   */
+  sendData: (id: string, data: string, encoding?: string) => void
+  /**
+   * 调整窗口大小
+   * @param id 会话 ID
+   * @param cols 列数
+   * @param rows 行数
+   */
+  resize: (id: string, cols: number, rows: number) => void
+  /**
+   * 监听数据事件
+   * @param id 会话 ID
+   * @param cb 回调函数，参数为数据
+   */
+  onData: (id: string, cb: (data: string) => void) => () => void
+  /**
+   * 监听关闭事件
+   * @param id 会话 ID
+   * @param cb 回调函数，参数为关闭事件
+   */
+  onClose: (id: string, cb: () => void) => () => void
+}
+
 /** 凭据 API */
 export interface ZauTermCredentialsApi {
   /** 
@@ -520,4 +579,6 @@ export interface ZauTermApi {
   telnet: ZauTermTelnetApi
   /** 串口 API */
   serial: ZauTermSerialApi
+  /** 本机 Shell API */
+  local: ZauTermLocalApi
 }

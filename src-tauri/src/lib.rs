@@ -6,6 +6,7 @@ mod encoding;
 mod invoke_commands;
 mod ipc;
 mod known_hosts;
+mod local;
 mod path_policy;
 mod serial;
 mod session;
@@ -76,6 +77,10 @@ pub fn run() {
             commands::serial::serial_connect,
             commands::serial::serial_disconnect,
             commands::serial::serial_send_data,
+            commands::local::local_connect,
+            commands::local::local_disconnect,
+            commands::local::local_send_data,
+            commands::local::local_resize,
         ])
         .setup(|app| { // 初始化设置应用（初始化窗口、创建数据目录等）
             commands::window::attach_maximize_events(app.handle()); // 监听窗口最大化事件

@@ -3,6 +3,7 @@ import { normalizeTerminalEncoding } from '@/lib/terminal/terminalEncoding'
 import { TERMINAL_ENCODING_OPTIONS } from '../terminalEncodingService'
 import type { SerialStorageDefaults, SshStorageDefaults } from './defaults'
 import type {
+  LocalSavedSession,
   RawImportedSession,
   SavedSession,
   SerialSavedSession,
@@ -183,7 +184,7 @@ function applySerialStorageFieldsWithWarnings(
  * 1. 结构/类型/必填字段校验 → 失败则 ok:false 并返回 reason（跳过该条，不中断整批导入）
  * 2. 分组/标签合法性校验（与连接对话框相同规则）
  * 3. 解析各类型共用的 encoding、backspaceMode、savedId、savedAt、label
- * 4. 按 ssh / telnet / serial 分支组装类型专有字段，非法值回退默认并记 fieldDefaulted 警告
+ * 4. 按 ssh / telnet / serial / local 分支组装类型专有字段，非法值回退默认并记 fieldDefaulted 警告
  * 5. pickSessionStorageFields 剔除不应持久化的字段（如明文密码），再补回 savedId/savedAt
  * @param raw 原始会话对象
  * @returns 返回规范后的会话
@@ -199,7 +200,7 @@ export function normalizeImportedSession(raw: unknown): NormalizeImportedSession
   const type = String(item.type ?? '').trim().toLowerCase() as SessionType
   if (!SESSION_TYPE_SET.has(type)) return { ok: false, reason: 'invalidType' }
 
-  // 各类型必填连接参数：ssh/telnet 需 host，serial 需 path
+  // 各类型必填连接参数：ssh/telnet 需 host，serial 需 path；local 无必填连接参数
   if (type === 'ssh' || type === 'telnet') {
     if (!String(item.host ?? '').trim()) return { ok: false, reason: 'missingHost' }
   }
@@ -342,6 +343,21 @@ export function normalizeImportedSession(raw: unknown): NormalizeImportedSession
       port,
     }
     session = pickSessionStorageFields(telnetSession) as TelnetSavedSession
+    session.savedId = savedId
+    session.savedAt = savedAt
+  } else if (type === 'local') {
+    const localSession: LocalSavedSession = {
+      type: 'local',
+      savedId,
+      savedAt,
+      group,
+      label,
+      encoding,
+      backspaceMode,
+      shell: String(item.shell ?? '').trim(),
+      cwd: String(item.cwd ?? '').trim(),
+    }
+    session = pickSessionStorageFields(localSession) as LocalSavedSession
     session.savedId = savedId
     session.savedAt = savedAt
   } else {

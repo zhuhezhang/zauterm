@@ -9,7 +9,7 @@ import { TITLEBAR } from './components/TitleBar'
 import { WELCOME } from './components/app/WelcomeScreen'
 import { ABOUT } from './components/app/AboutDialog'
 import { SIDEBAR } from './components/sidebar/Sidebar'
-import { SSH, TELNET, SERIAL } from './ipcErrors'
+import { SSH, TELNET, SERIAL, LOCAL } from './ipcErrors'
 import type { TranslateParams, UiLanguage } from '../types/common'
 
 /** 聚合各模块文案；键路径如 settings.title */
@@ -20,6 +20,7 @@ const RENDER_MESSAGES = {
     credential: CREDENTIAL.zh,
     credentials: CREDENTIALS.zh,
     serial: SERIAL.zh,
+    local: LOCAL.zh,
     ssh: SSH.zh,
     telnet: TELNET.zh,
     settings: SETTINGS.zh,
@@ -37,6 +38,7 @@ const RENDER_MESSAGES = {
     credential: CREDENTIAL.en,
     credentials: CREDENTIALS.en,
     serial: SERIAL.en,
+    local: LOCAL.en,
     ssh: SSH.en,
     telnet: TELNET.en,
     settings: SETTINGS.en,

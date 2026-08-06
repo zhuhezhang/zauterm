@@ -84,7 +84,7 @@ export default function SessionTreeNode({
       onDrop={e => dropOnSession(e, node.id, s.group || '')}
       onClick={() => !isRenamingThis && onConnectSaved(s)}
       onContextMenu={e => openCtx(e, 'session', s)}
-      title={`${s.type?.toUpperCase()} ${sessionEndpoint(s)}`}>
+      title={`${String(s.type || '').toUpperCase()} ${sessionEndpoint(s)} · ${s.label || node.name}`}>
       <span className="sb-session-icon" style={{ color: TYPE_COLORS[s.type as SessionType] }}>{ConnectionTypeIcon[s.type as SessionType]}</span>
       {isRenamingThis ? (
         <input className="sb-rename-input" value={renameSessionVal} autoFocus ref={renameSessionInputRef}

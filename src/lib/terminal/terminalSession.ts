@@ -14,7 +14,7 @@ import { getZauterm } from '@/lib/ipc/getZauterm'
 import { formatThrownIpcError } from '@/lib/ipc/formatIpcError'
 import { readClipboardText, writeClipboardText } from '@/lib/ui/clipboard'
 import { getXtermTheme } from '../../theme/appTheme'
-import { pickSerialConnectConfig, pickSshConnectConfig, pickTelnetConnectConfig } from '../session/connectPayload'
+import { pickLocalConnectConfig, pickSerialConnectConfig, pickSshConnectConfig, pickTelnetConnectConfig } from '../session/connectPayload'
 import { applyHighlightRules, nextLineBreakEndIndex } from './terminalHighlight'
 import { attachMissingControlKeys } from './missingControlKeys'
 import type { ActiveSession, SessionType } from '../../types/session'
@@ -126,7 +126,7 @@ export function applyTerminalSettings(
 }
 
 /**
- * 断开主进程侧会话 transport（SSH/Telnet/Serial，及可选 SFTP）。
+ * 断开主进程侧会话 transport（SSH/Telnet/Serial/Local，及可选 SFTP）。
  * 标签页关闭或连接中途取消时调用；重复 disconnect 安全
  * @param session 会话对象，包含会话 ID、类型和可选 SFTP 配置
  * @param options 可选参数，包含是否包含 SFTP 配置
@@ -146,6 +146,8 @@ export function teardownSessionTransport(
       void zauterm.telnet.disconnect(id)
     } else if (type === 'serial') {
       void zauterm.serial.disconnect(id)
+    } else if (type === 'local') {
+      void zauterm.local.disconnect(id)
     }
   } catch {
     /* 主进程会话可能尚未建立或已断开 */
@@ -383,6 +385,37 @@ export async function connectSession(
           serialHighlightBuf = ''
         }
       }, r1, r2, () => d1.dispose(), () => zauterm.serial.disconnect(id))
+    } catch (e) {
+      if (isCancelled?.()) return
+      writeError(terminalErr(e))
+      showReconnectHint()
+      onUpdate({ status: 'error' })
+    }
+  } else if (session.type === 'local') {
+    const shellHint = String(session.shell ?? '').trim() || 'default'
+    writeInfo(translateRender(L(), 'terminal.localConnecting', { shell: shellHint }))
+    try {
+      const zauterm = getZauterm()
+      const dim = proposeTerminalDimensions(term) || { cols: 80, rows: 24 }
+      const connectPayload = {
+        ...pickLocalConnectConfig(session),
+        cols: dim.cols,
+        rows: dim.rows,
+      }
+      const res = await zauterm.local.connect(id, connectPayload)
+      if (abortIfCancelled(session, isCancelled)) return
+      assertIpcSuccess(res)
+      writeSuccess(translateRender(L(), 'terminal.connected'))
+      onUpdate({ status: 'connected' })
+      zauterm.local.resize(id, dim.cols, dim.rows)
+
+      const r1 = zauterm.local.onData(id, recv)
+      const r2 = zauterm.local.onClose(id, () => onDisconnect('terminal.closed'))
+      const d1 = term.onData((data) => {
+        zauterm.local.sendData(id, normalizeInputData(type, data, sessionRef.current), terminalEncoding)
+      })
+      const d2 = term.onResize(({ cols, rows }) => zauterm.local.resize(id, cols, rows))
+      cleanupRef.current.push(r1, r2, () => d1.dispose(), () => d2.dispose(), () => zauterm.local.disconnect(id))
     } catch (e) {
       if (isCancelled?.()) return
       writeError(terminalErr(e))

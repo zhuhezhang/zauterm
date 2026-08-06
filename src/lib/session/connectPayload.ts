@@ -1,8 +1,10 @@
 import type {
-  SerialConnectConfig, SshConnectConfig, TelnetConnectConfig,
+  SerialConnectConfig, SshConnectConfig, TelnetConnectConfig, LocalConnectConfig,
 } from '@/lib/ipc/zauterm-api'
 import type { AppSettings } from '../../types/settings'
-import type { ActiveSshSession, ActiveTelnetSession, ActiveSerialSession } from '../../types/session'
+import type {
+  ActiveSshSession, ActiveTelnetSession, ActiveSerialSession, ActiveLocalSession,
+} from '../../types/session'
 
 /**
  * 提取 SSH / SFTP 连接所需字段
@@ -56,6 +58,20 @@ export function pickSerialConnectConfig(session: ActiveSerialSession): SerialCon
     dataBits: session.dataBits,
     stopBits: session.stopBits,
     parity: session.parity,
+    encoding: session.encoding,
+    backspaceMode: session.backspaceMode,
+  }
+}
+
+/**
+ * 提取本机 Shell 连接所需字段
+ * @param session 会话
+ * @returns 返回 Local 连接配置
+ */
+export function pickLocalConnectConfig(session: ActiveLocalSession): LocalConnectConfig {
+  return {
+    shell: session.shell,
+    cwd: session.cwd,
     encoding: session.encoding,
     backspaceMode: session.backspaceMode,
   }

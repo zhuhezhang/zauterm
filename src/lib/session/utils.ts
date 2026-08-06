@@ -87,6 +87,12 @@ export function buildSessionLabel(
     const raw = String(form.host || 'Telnet')
     return raw.replace(INVALID_LABEL_CHARS, '').trim() || 'Telnet'
   }
+  if (tab === 'local') {
+    const shellPath = String(form.shell || '').trim()
+    const shellName = shellPath.split(/[/\\]/).filter(Boolean).pop() || ''
+    const raw = shellName || 'Local'
+    return raw.replace(INVALID_LABEL_CHARS, '').trim() || 'Local'
+  }
   const raw =
     (form.username ? String(form.username) + '@' : '') +
     (form.host || String(tab).toUpperCase())

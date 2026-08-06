@@ -58,6 +58,10 @@ var ALLOWED_CMDS = {
   serial_connect: 1,
   serial_disconnect: 1,
   serial_send_data: 1,
+  local_connect: 1,
+  local_disconnect: 1,
+  local_send_data: 1,
+  local_resize: 1,
 }
 
 /** 收紧插件 IPC 允许列表(前端实际上使用这些)，必须与 invoke_commands::ALLOWED_PLUGIN_COMMANDS 匹配 */

@@ -47,4 +47,33 @@ describe('normalizeImportedSession', () => {
   it('rejects serial session without path', () => {
     expect(normalizeImportedSession({ type: 'serial', label: 'com' })).toEqual({ ok: false, reason: 'missingPath' })
   })
+
+  it('normalizes local session without shell or cwd', () => {
+    const result = normalizeImportedSession({
+      type: 'local',
+      label: 'My Shell',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.session.type).toBe('local')
+    if (result.session.type !== 'local') return
+    expect(result.session.label).toBe('My Shell')
+    expect(result.session.shell).toBe('')
+    expect(result.session.cwd).toBe('')
+  })
+
+  it('normalizes local session with shell and cwd', () => {
+    const result = normalizeImportedSession({
+      type: 'local',
+      label: 'dev-shell',
+      shell: '/bin/zsh',
+      cwd: '/tmp',
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    if (result.session.type !== 'local') return
+    expect(result.session.shell).toBe('/bin/zsh')
+    expect(result.session.cwd).toBe('/tmp')
+    expect(result.session.label).toBe('dev-shell')
+  })
 })

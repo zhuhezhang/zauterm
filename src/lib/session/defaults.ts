@@ -6,7 +6,7 @@ export const PORT_MIN = 0
 /** 端口最大值 */
 export const PORT_MAX = 65535
 /** 会话类型列表 */
-export const SESSION_TYPES = ['ssh', 'telnet', 'serial']
+export const SESSION_TYPES = ['ssh', 'telnet', 'serial', 'local']
 /** 会话类型集合（用于快速判断是否为合法会话类型） */
 export const SESSION_TYPE_SET = new Set(SESSION_TYPES)
 /** SSH 认证类型列表 */
@@ -28,6 +28,7 @@ export const SESSION_TYPE_FIELDS = {
   ssh: ['host', 'port', 'username', 'authType', 'enableSftp', 'encoding', 'backspaceMode'],
   telnet: ['host', 'port', 'encoding', 'backspaceMode'],
   serial: ['path', 'baudRate', 'dataBits', 'stopBits', 'parity', 'encoding', 'backspaceMode'],
+  local: ['shell', 'cwd', 'encoding', 'backspaceMode'],
 }
 
 /** 验证会话分组和标签返回码 → connect.* i18n 键 */
@@ -77,14 +78,30 @@ export const SERIAL_SESSION_DEFAULT = {
   backspaceMode: 'auto',
 }
 
+/** local 会话默认值 */
+export const LOCAL_SESSION_DEFAULT = {
+  label: '',
+  group: '',
+  shell: '',
+  cwd: '',
+  encoding: DEFAULT_TERMINAL_ENCODING,
+  backspaceMode: 'auto',
+}
+
 /** SSH 会话保存/导入时的数值型默认值 */
 export type SshStorageDefaults = typeof SSH_SESSION_DEFAULT
 /** Telnet 会话保存/导入时的数值型默认值 */
 export type TelnetStorageDefaults = typeof TELNET_SESSION_DEFAULT
 /** Serial 会话保存/导入时的数值型默认值 */
 export type SerialStorageDefaults = typeof SERIAL_SESSION_DEFAULT
+/** Local 会话保存/导入时的数值型默认值 */
+export type LocalStorageDefaults = typeof LOCAL_SESSION_DEFAULT
 /** 会话保存/导入时的数值型默认值 */
-export type SessionStorageDefaults = SshStorageDefaults | TelnetStorageDefaults | SerialStorageDefaults
+export type SessionStorageDefaults =
+  | SshStorageDefaults
+  | TelnetStorageDefaults
+  | SerialStorageDefaults
+  | LocalStorageDefaults
 
 /**
  * 获取会话保存/导入时的数值型默认值
@@ -94,6 +111,7 @@ export type SessionStorageDefaults = SshStorageDefaults | TelnetStorageDefaults 
 export function getSessionStorageDefaults(type: SessionType): SessionStorageDefaults {
   if (type === 'ssh') return { ...SSH_SESSION_DEFAULT }
   if (type === 'telnet') return { ...TELNET_SESSION_DEFAULT }
+  if (type === 'local') return { ...LOCAL_SESSION_DEFAULT }
   return { ...SERIAL_SESSION_DEFAULT }
 }
 
@@ -108,6 +126,7 @@ export function getSessionFormDefaults(type: SessionType): SessionFormValues {
     ssh: ['port'],
     telnet: ['port'],
     serial: ['baudRate', 'dataBits', 'stopBits'],
+    local: [],
   }
   const out = { ...getSessionStorageDefaults(type) } as SessionFormValues
   for (const key of SESSION_FORM_NUMERIC_KEYS[type] ?? []) {

@@ -1,7 +1,7 @@
 {
   "name": "zauterm",
   "private": true,
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "A cross-platform terminal emulator built with Tauri, React, and xterm.js, supporting SSH, SFTP, serial, and Telnet",
   "type": "module",
   "homepage": "https://github.com/zhuhezhang/zauterm",

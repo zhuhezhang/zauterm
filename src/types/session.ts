@@ -2,7 +2,7 @@
 import type { Terminal } from '@xterm/xterm'
 
 /** 会话类型枚举 */
-export type SessionType = 'ssh' | 'telnet' | 'serial'
+export type SessionType = 'ssh' | 'telnet' | 'serial' | 'local'
 
 /** 会话状态枚举 */
 export type SessionStatus =
@@ -79,8 +79,18 @@ export interface SerialSavedSession extends SessionBase {
   parity?: string
 }
 
+/** 本机 Shell 会话持久化字段 */
+export interface LocalSavedSession extends SessionBase {
+  /** 会话类型 */
+  type: 'local'
+  /** Shell 可执行文件路径（空则系统默认） */
+  shell?: string
+  /** 工作目录（空则用户家目录） */
+  cwd?: string
+}
+
 /** localStorage 中已保存的会话 */
-export type SavedSession = SshSavedSession | TelnetSavedSession | SerialSavedSession
+export type SavedSession = SshSavedSession | TelnetSavedSession | SerialSavedSession | LocalSavedSession
 
 /** 活跃会话在 SavedSession 之上附加的运行时字段 */
 export interface ActiveSessionFields {
@@ -106,9 +116,11 @@ export type ActiveSshSession = SshSavedSession & ActiveSessionFields
 export type ActiveTelnetSession = TelnetSavedSession & ActiveSessionFields
 /** 活跃 Serial 会话 */
 export type ActiveSerialSession = SerialSavedSession & ActiveSessionFields
+/** 活跃本机 Shell 会话 */
+export type ActiveLocalSession = LocalSavedSession & ActiveSessionFields
 
 /** 顶部标签页中的活跃会话 */
-export type ActiveSession = ActiveSshSession | ActiveTelnetSession | ActiveSerialSession
+export type ActiveSession = ActiveSshSession | ActiveTelnetSession | ActiveSerialSession | ActiveLocalSession
 
 /** 连接对话框 / 启动会话使用的配置（字段并集，便于表单与 IPC 传参） */
 export interface SessionConfig {
@@ -156,6 +168,10 @@ export interface SessionConfig {
   stopBits?: number | string
   /** 奇偶校验 */
   parity?: string
+  /** Shell 可执行文件路径 */
+  shell?: string
+  /** 工作目录 */
+  cwd?: string
 }
 
 /** 连接对话框表单字段（字符串/数值混用，便于 input 绑定） */
@@ -194,6 +210,10 @@ export interface SessionFormValues {
   stopBits?: string | number
   /** 奇偶校验 */
   parity?: string
+  /** Shell 可执行文件路径 */
+  shell?: string
+  /** 工作目录 */
+  cwd?: string
   /** 会话 ID */
   savedId?: string
   /** 会话类型 */
@@ -285,11 +305,13 @@ export type SshPickedFields = Omit<SshSavedSession, 'savedId' | 'savedAt'>
 export type TelnetPickedFields = Omit<TelnetSavedSession, 'savedId' | 'savedAt'>
 /** Serial 会话持久化字段 */
 export type SerialPickedFields = Omit<SerialSavedSession, 'savedId' | 'savedAt'>
+/** Local 会话持久化字段 */
+export type LocalPickedFields = Omit<LocalSavedSession, 'savedId' | 'savedAt'>
 
-/** pickSessionStorageFields 写入 localStorage 的字段形状（SSH / Telnet / Serial 共用） */
-export type PickedSessionFields = SshPickedFields | TelnetPickedFields | SerialPickedFields
+/** pickSessionStorageFields 写入 localStorage 的字段形状 */
+export type PickedSessionFields = SshPickedFields | TelnetPickedFields | SerialPickedFields | LocalPickedFields
 
-/** 导入 JSON 中的原始会话字段（校验前，SSH / Telnet / Serial 共用） */
+/** 导入 JSON 中的原始会话字段（校验前） */
 export interface RawImportedSession {
   /** 会话类型 */
   type?: string
@@ -331,12 +353,20 @@ export interface RawImportedSession {
   stopBits?: string | number
   /** 奇偶校验 */
   parity?: string
+  /** Shell 可执行文件路径 */
+  shell?: string
+  /** 工作目录 */
+  cwd?: string
 }
 
-/** 会话连接端点（host 或 serial path） */
+/** 会话连接端点（host、serial path 或 local shell） */
 export function sessionEndpoint(session: SavedSession | ActiveSession | SessionConfig): string {
   if (session.type === 'serial') {
     return String('path' in session ? session.path ?? '' : '')
+  }
+  if (session.type === 'local') {
+    const shell = 'shell' in session ? String(session.shell ?? '').trim() : ''
+    return shell || 'localhost'
   }
   return String('host' in session ? session.host ?? '' : '')
 }

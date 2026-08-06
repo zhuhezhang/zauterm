@@ -10,6 +10,7 @@ import { PrivateKeyField } from './connect/PrivateKeyField'
 import SshForm from './connect/SshForm'
 import TelnetForm from './connect/TelnetForm'
 import SerialForm from './connect/SerialForm'
+import LocalForm from './connect/LocalForm'
 import { isSerialPathInEnumeratedList } from '@/lib/serial/isSerialPathInEnumeratedList'
 import type { ConnectDialogProps } from '../types/components'
 import type { ConnectCredDialogState } from '../types/components'
@@ -24,7 +25,7 @@ import {
 } from '../lib/session/utils'
 import '../styles/dialog.css'
 
-/** 连接对话框组件：提供 SSH、Telnet、Serial 三种连接方式的配置界面，支持保存会话和直接连接 */
+/** 连接对话框组件：提供 SSH、Telnet、Serial、Local 四种连接方式的配置界面，支持保存会话和直接连接 */
 function ConnectDialog({
   type,
   initialData,
@@ -110,7 +111,7 @@ function ConnectDialog({
     if (!sid) return
     void (async () => {
       const sessionType = initialData.type || type || 'ssh'
-      const sec = sessionType === 'telnet' ? {} : await fetchSessionSecrets(sid)
+      const sec = sessionType === 'ssh' ? await fetchSessionSecrets(sid) : {}
       if (cancelled) return
       const merged: SessionFormValues = {
         ...mergeSessionFormDefaults(sessionType, initialData ?? undefined),
@@ -202,7 +203,7 @@ function ConnectDialog({
    * @returns 是否需要输入凭证
    */
   const needsCredentials = (config: SessionConfig) => {
-    if (config.type === 'telnet') return false
+    if (config.type === 'telnet' || config.type === 'local' || config.type === 'serial') return false
     if (config.type === 'ssh') {
       if (!config.username?.trim()) return true
       if (config.authType === 'privateKey') return !config.privateKey?.trim()
@@ -346,9 +347,9 @@ function ConnectDialog({
       <div className="dialog">
         <div className="dialog-header">
           <div className="dialog-tabs">
-            {(['ssh', 'telnet', 'serial'] as const).map((proto) => (
+            {(['ssh', 'telnet', 'serial', 'local'] as const).map((proto) => (
               <button key={proto} type="button" className={`dialog-tab ${tab === proto ? 'active' : ''}`} onClick={() => switchTab(proto)}>
-                {proto === 'ssh' ? 'SSH' : proto === 'telnet' ? 'Telnet' : 'Serial'}
+                {proto === 'ssh' ? 'SSH' : proto === 'telnet' ? 'Telnet' : proto === 'serial' ? t('connect.serial') : t('connect.local')}
               </button>
             ))}
           </div>
@@ -369,6 +370,7 @@ function ConnectDialog({
           <SshForm form={form} set={set} visible={tab === 'ssh'} onEnter={saveAndConnect} />
           <TelnetForm form={form} set={set} visible={tab === 'telnet'} onEnter={saveAndConnect} />
           <SerialForm form={form} set={set} ports={ports} visible={tab === 'serial'} onRefreshPorts={refreshSerialPorts} onEnter={saveAndConnect} />
+          <LocalForm form={form} set={set} visible={tab === 'local'} onEnter={saveAndConnect} />
           <FormRow label={t('connect.encoding')}>
             <select value={form.encoding || DEFAULT_TERMINAL_ENCODING} onChange={e => set('encoding', e.target.value)}>
               {TERMINAL_ENCODING_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

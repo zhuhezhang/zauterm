@@ -1,7 +1,7 @@
 [package]
 name = "zauterm"
-version = "3.3.0"
-description = "ZauTerm - cross-platform terminal (SSH/SFTP/Telnet/Serial)"
+version = "3.3.1"
+description = "ZauTerm - cross-platform terminal (SSH/SFTP/Telnet/Serial/Local)"
 authors = ["zhuhezhang"]
 edition = "2021"  # Rust版本
 
@@ -37,6 +37,7 @@ chacha20poly1305 = "0.10"
 walkdir = "2"
 once_cell = "1"
 tauri-plugin-clipboard-manager = "2"
+portable-pty = "0.9"
 
 [profile.release]  # 正式发布如何编译
 panic = "abort"  # panic 直接中止，不展开完整展开栈，体积更小

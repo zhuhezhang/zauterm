@@ -1,7 +1,7 @@
 import type { FolderIconProps } from '@/types/components'
 
 /** 连接类型颜色映射 */
-export const TYPE_COLORS = { ssh: '#58a6ff', telnet: '#3fb950', serial: '#ffa657' }
+export const TYPE_COLORS = { ssh: '#58a6ff', telnet: '#3fb950', serial: '#ffa657', local: '#d2a8ff' }
 
 /** sftp和会话分组展开/收起图标 */
 export function Chevron() {

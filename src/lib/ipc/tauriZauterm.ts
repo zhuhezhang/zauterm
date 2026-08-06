@@ -4,6 +4,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import type {
   ChooseOpenKind,
   ChooseOpenResult,
+  LocalConnectConfig,
   SaveFileKind,
   SerialConnectConfig,
   SshConnectConfig,
@@ -28,11 +29,11 @@ type ProgressPayload = [string, ZauTermProgress]
  * @param prefix 前缀：ssh、telnet、serial
  * @returns 流桥接
  */
-function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial') {
+function createStreamBridge(prefix: 'ssh' | 'telnet' | 'serial' | 'local') {
   const outputEvent = `${prefix}:output`
   const closedEvent = `${prefix}:closed`
   return {
-    connect: (id: string, config: SshConnectConfig | TelnetConnectConfig | SerialConnectConfig) =>
+    connect: (id: string, config: SshConnectConfig | TelnetConnectConfig | SerialConnectConfig | LocalConnectConfig) =>
       invoke<IpcResult>(`${prefix}_connect`, { id, config }),
     disconnect: (id: string) => invoke<IpcResult>(`${prefix}_disconnect`, { id }),
     sendData: (id: string, data: string, encoding?: string) => {
@@ -72,6 +73,7 @@ export function createTauriZauterm(): ZauTermApi {
   const sshBase = createStreamBridge('ssh')
   const telnet = createStreamBridge('telnet')
   const serialBase = createStreamBridge('serial')
+  const localBase = createStreamBridge('local')
 
   return {
     window: {
@@ -155,6 +157,14 @@ export function createTauriZauterm(): ZauTermApi {
       sendData: serialBase.sendData,
       onData: serialBase.onData,
       onClose: serialBase.onClose,
+    },
+
+    local: {
+      ...localBase,
+      connect: (id, config) => invoke<IpcResult>('local_connect', { id, config }),
+      resize: (id, cols, rows) => {
+        void invoke('local_resize', { id, cols, rows })
+      },
     },
 
     credentials: {

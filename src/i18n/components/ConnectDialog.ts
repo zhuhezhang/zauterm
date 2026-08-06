@@ -1,6 +1,8 @@
 /** ConnectDialog.jsx */
 export const CONNECT = {
   zh: {
+    "serial": "串口",
+    "local": "本地",
     "cancel": "取消",
     "label": "标签",
     "labelPh": "可选，自定义名称",
@@ -8,7 +10,7 @@ export const CONNECT = {
     "groupPh": "可选，空则保存在根分组",
     "encoding": "终端编码",
     "backspaceMode": "退格键模式",
-    "backspaceModeHint": "设置发送给设备的退格编码。Auto: SSH 用 DEL，Telnet/Serial 用 BS",
+    "backspaceModeHint": "设置发送给设备的退格编码。Auto: SSH/Local 用 DEL，Telnet/Serial 用 BS",
     "host": "主机",
     "hostPh": "主机名 或 IP",
     "port": "端口",
@@ -34,6 +36,10 @@ export const CONNECT = {
     "dataBits": "数据位",
     "stopBits": "停止位",
     "parity": "校验位",
+    "shell": "Shell",
+    "shellPh": "可选，空则系统默认",
+    "cwd": "工作目录",
+    "cwdPh": "可选，空则用户家目录",
     "save": "保存",
     "connectDirect": "直接连接",
     "saveAndConnect": "保存并连接",
@@ -46,6 +52,8 @@ export const CONNECT = {
     "errLabelChars": "标签名不允许包含以下字符：/ \\ : * ? \" < > |"
   },
   en: {
+    "serial": "Serial",
+    "local": "Local",
     "cancel": "Cancel",
     "label": "Label",
     "labelPh": "Optional, custom name",
@@ -53,7 +61,7 @@ export const CONNECT = {
     "groupPh": "Optional, empty = root group",
     "encoding": "Terminal encoding",
     "backspaceMode": "Backspace mode",
-    "backspaceModeHint": "Byte sent for backspace. Auto: DEL for SSH, BS for Telnet/Serial",
+    "backspaceModeHint": "Byte sent for backspace. Auto: DEL for SSH/Local, BS for Telnet/Serial",
     "host": "Host",
     "hostPh": "Hostname or IP",
     "port": "Port",
@@ -79,6 +87,10 @@ export const CONNECT = {
     "dataBits": "Data bits",
     "stopBits": "Stop bits",
     "parity": "Parity",
+    "shell": "Shell",
+    "shellPh": "Optional, system default if empty",
+    "cwd": "Working directory",
+    "cwdPh": "Optional, home directory if empty",
     "save": "Save",
     "connectDirect": "Connect",
     "saveAndConnect": "Save & connect",

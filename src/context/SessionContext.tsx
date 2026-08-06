@@ -164,7 +164,7 @@ export function SessionProvider({
   /**
    * 打开连接对话框，设置类型和初始数据（这里使用 useCallback，主要是为了“把这函数做成稳定的、可重用的函数引用”，
    * 让它在组件重渲染时不会不断变动。这种模式在 Hook 里很常见，尤其当这些函数会被传到其他组件或作为依赖使用时）
-   * @param type 连接类型，可选值为 'ssh'、'telnet' 或 'serial'
+   * @param type 连接类型，可选值为 'ssh'、'telnet'、'serial' 或 'local'
    * @param initial 初始数据，编辑已保存会话时传入
    */
   const openDialog = useCallback((type: SessionType = 'ssh', initial: SessionConfig | null = null) => {
@@ -426,12 +426,12 @@ export function SessionProvider({
   }, [savedSessions, updateSaved, settings, launchSession, t])
 
   /**
-   * 连接已保存会话：SSH 缺凭据时弹出凭证对话框；Telnet/Serial 直接启动
+   * 连接已保存会话：SSH 缺凭据时弹出凭证对话框；Telnet/Serial/Local 直接启动
    * @param s 会话配置对象
    */
   const handleConnSaved = useCallback((s: SavedSession) => {
     void (async () => {
-      if (s.type === 'serial' || s.type === 'telnet') {
+      if (s.type === 'serial' || s.type === 'telnet' || s.type === 'local') {
         launchSession(s)
         return
       }

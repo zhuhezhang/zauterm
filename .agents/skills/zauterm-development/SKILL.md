@@ -1,7 +1,7 @@
 ---
 name: zauterm-development
 description: >-
-  Develop, debug, test, and package the ZauTerm Tauri terminal app (SSH/SFTP/Telnet/Serial).
+  Develop, debug, test, and package the ZauTerm Tauri terminal app (SSH/SFTP/Telnet/Serial/Local).
   Use when working in the zauterm repo. Layout: src/ frontend, src-tauri/ Rust backend,
   src-isolation/ IPC allowlist. Also for invoke commands, path policy, vault, Vitest,
   cargo:check / cargo:test, project:check, and tauri build.
@@ -9,7 +9,7 @@ description: >-
 
 # ZauTerm 开发 Skill
 
-跨平台 Tauri 终端：React Webview + Rust 后端（ssh2 / serialport）。连接类型：SSH、SFTP、Telnet、Serial。
+跨平台 Tauri 终端：React Webview + Rust 后端（ssh2 / serialport / portable-pty）。连接类型：SSH、SFTP、Telnet、Serial、Local。
 
 ## 代码三分法（最重要）
 
@@ -31,7 +31,7 @@ description: >-
 ```
 前端 src/  ←—— window.zauterm ——→  tauriZauterm.ts  ←—— invoke/listen ——→  src-tauri/commands/
                      ↑                                              │
-              src-isolation/                                    ssh/sftp/telnet/serial
+              src-isolation/                                    ssh/sftp/telnet/serial/local
 ```
 
 ## 架构速览
@@ -42,7 +42,7 @@ description: >-
 | IPC 桥 | `src/lib/ipc/tauriZauterm.ts` | 实现 `ZauTermApi`；`main.tsx` 挂到 `window.zauterm` |
 | Isolation | `src-isolation/index.js` | `ALLOWED_CMDS` + `ALLOWED_PLUGIN_CMDS` |
 | Commands | `src-tauri/src/commands/` | Tauri command 入口，返回 IPC envelope |
-| 协议 | `src-tauri/src/{ssh,sftp,telnet,serial}/` | 连接与 I/O |
+| 协议 | `src-tauri/src/{ssh,sftp,telnet,serial,local}/` | 连接与 I/O |
 | 安全库 | `path_policy` / `known_hosts` / `vault` / `ssh_key` | 路径、主机指纹、凭据、内存私钥认证 |
 | 测试 | `tests/` + `src-tauri` `#[cfg(test)]` | Vitest / `npm run cargo:test` |
 

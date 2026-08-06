@@ -20,7 +20,8 @@ export default function WelcomeScreen({ onNewSession }: WelcomeScreenProps) {
       <div className="welcome-actions">
         {[{type:'ssh',icon:ConnectionTypeIcon.ssh,label:'SSH',desc:t('welcome.sshDesc')},
           {type:'telnet',icon:ConnectionTypeIcon.telnet,label:'Telnet',desc:t('welcome.telnetDesc')},
-          {type:'serial',icon:ConnectionTypeIcon.serial,label:'Serial',desc:t('welcome.serialDesc')}].map(b => (
+          {type:'serial',icon:ConnectionTypeIcon.serial,label:t('welcome.serial'),desc:t('welcome.serialDesc')},
+          {type:'local',icon:ConnectionTypeIcon.local,label:t('welcome.local'),desc:t('welcome.localDesc')}].map(b => (
           <button key={b.type} className="welcome-btn" onClick={() => onNewSession(b.type as SessionType)}>
             <span className="welcome-btn-icon">{b.icon}</span>
             <span className="welcome-btn-label">{b.label}</span>

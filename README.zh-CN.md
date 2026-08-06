@@ -1,8 +1,8 @@
 # ZauTerm
 
-简体中文 · **[English](README.md)** · v3.3.0
+简体中文 · **[English](README.md)** · v3.3.1
 
-ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌面终端模拟器。支持 **SSH**、**SFTP**、**Telnet** 与 **串口（Serial）** 连接，并提供会话保存、层级分组、加密凭据存储，以及自定义界面（覆盖式标题栏、深色/浅色主题、中英双语）。
+ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌面终端模拟器。支持 **SSH**、**SFTP**、**Telnet**、**串口（Serial）** 与 **本地（Local）** Shell 连接，并提供会话保存、层级分组、加密凭据存储，以及自定义界面（覆盖式标题栏、深色/浅色主题、中英双语）。
 
 > 由 Electron 版 [ZenTerm](https://github.com/zhuhezhang/zenterm) 演进而来：产品能力对齐，后端改为 Rust / Tauri。
 
@@ -37,12 +37,13 @@ ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌
 | **SFTP**   | 侧边栏远程文件管理：列表、上传、下载、新建目录、重命名、删除；传输进度；本地路径限制在安全用户目录内 |
 | **Telnet** | 原生 TCP Telnet 客户端                                                   |
 | **Serial** | 通过 `serialport` 访问本地串口（波特率、数据位、停止位、校验位）；须从枚举列表中选择端口 |
+| **Local**  | 本机交互式 Shell（`portable-pty`：Unix PTY / Windows ConPTY）；可选 Shell 路径与工作目录（默认 `$SHELL` / `COMSPEC`、用户主目录）；支持 PTY 尺寸同步 |
 
 ### 会话管理
 
 - 保存会话：**标签名**、**分组**（层级路径）、连接参数
 - **空分组占位**：可先创建文件夹式分组，再向其中添加会话
-- **搜索**已保存会话（按名称、主机或串口路径；**Ctrl/Cmd+F** 聚焦搜索框）
+- **搜索**已保存会话（按名称、主机、串口路径或本地 Shell；**Ctrl/Cmd+F** 聚焦搜索框）
 - **复制**、**重命名**、**编辑**、**删除**；可配置删除确认
 - **导出 / 导入**会话列表（JSON envelope，v1）；可在 **设置** 或 **侧边栏** 中导入
 - 连接对话框支持 **直接连接**、**保存并连接**、**仅保存**
@@ -54,7 +55,7 @@ ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌
 - 会话断开或 **初次连接失败** 后，在终端内按 **R** 可 **快速重连**
 - **终端内搜索**：增量查找并高亮匹配；支持 **区分大小写**、**全字匹配**、**正则表达式**；上/下跳转；可通过标签右键菜单或 **Ctrl/Cmd+Shift+F** 打开
 - **字符编码**：UTF-8、GBK、GB18030、GB2312、Big5、UTF-16 LE、Latin-1（后端 `encoding_rs`；前端 `TextDecoder`）
-- **退格键模式**（按会话）：自动（SSH 发 DEL，Telnet/串口发 BS），或强制 DEL / BS
+- **退格键模式**（按会话）：自动（SSH/Local 发 DEL，Telnet/串口发 BS），或强制 DEL / BS
 - **终端交互**：选中复制、右键粘贴（可在设置中关闭）
 - **输出高亮**：正则规则着色（内置错误/成功/警告/IP 等默认规则）
 - **标签栏**：新建连接、关闭当前/其他/左侧/右侧/全部、清屏、保存终端输出
@@ -74,7 +75,7 @@ ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌
 - Capabilities **最小权限**（前端不授予宽泛的 `fs:` / `opener:`）
 - **SSH 主机公钥校验**（`zauterm-known-hosts.json`）；首次连接与指纹变更时弹窗确认
 - 可选 **加密凭据库**（ChaCha20-Poly1305；主密钥存 OS keyring）
-- 日志与 SFTP 的 **本地路径策略**：用户主目录、文档、下载、桌面、音乐/图片/视频、应用数据目录；Windows 上另允许非系统盘根目录（如 `D:\`）
+- 日志、SFTP 与 Local 会话工作目录的 **本地路径策略**：用户主目录、文档、下载、桌面、音乐/图片/视频、应用数据目录；Windows 上另允许非系统盘根目录（如 `D:\`）
 
 ---
 
@@ -110,7 +111,7 @@ ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌
 | 层级         | 技术                                              |
 | ---------- | ----------------------------------------------- |
 | 桌面壳        | Tauri 2                                         |
-| 后端         | Rust（`ssh2`、`serialport`、`encoding_rs` 等）       |
+| 后端         | Rust（`ssh2`、`serialport`、`portable-pty`、`encoding_rs` 等） |
 | 前端         | TypeScript、React 19、Vite 6                      |
 | 终端         | @xterm/xterm 5、Fit / Web Links / Search 插件     |
 | 加密         | ChaCha20-Poly1305 + OS keyring                  |
@@ -126,7 +127,7 @@ ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌
 | 目录               | 角色    | 说明                                                      |
 | ---------------- | ----- | ------------------------------------------------------- |
 | `src/`           | 前端    | React Webview：UI、xterm、localStorage、`window.zauterm` 桥接 |
-| `src-tauri/`     | 后端    | Tauri/Rust：commands、SSH/SFTP/Telnet/Serial、vault、路径策略   |
+| `src-tauri/`     | 后端    | Tauri/Rust：commands、SSH/SFTP/Telnet/Serial/Local、vault、路径策略 |
 | `src-isolation/` | IPC 闸门 | Isolation hook，白名单过滤 invoke 命令                          |
 
 ```
@@ -141,8 +142,8 @@ zauterm/
 ├── src-tauri/                           # 后端（Rust）
 │   ├── src/
 │   │   ├── lib.rs, main.rs              # 应用入口、generate_handler!
-│   │   ├── commands/                    # window / app / log / credentials / ssh / sftp / telnet / serial
-│   │   ├── ssh/, sftp/, telnet/, serial/
+│   │   ├── commands/                    # window / app / log / credentials / ssh / sftp / telnet / serial / local
+│   │   ├── ssh/, sftp/, telnet/, serial/, local/
 │   │   ├── path_policy/, known_hosts/, vault/
 │   │   ├── invoke_commands.rs           # IPC 命令权威列表（与 isolation 同步）
 │   │   ├── ssh_key.rs                   # 内存公钥认证
@@ -172,7 +173,7 @@ zauterm/
     ▼
 后端 src-tauri/（commands + 协议模块）
     ▼
-远程主机 / 本地串口 / OS keyring
+远程主机 / 本地串口 / 本机 Shell（PTY） / OS keyring
 ```
 
 ---
@@ -291,7 +292,7 @@ npm run mod:ver -- x.x.x
 2. **最小权限 Capabilities**：`capabilities/default.json` 仅授予所需的窗口/事件/对话框权限，不含宽泛的文件系统/opener 默认权限。
 3. **SSH 中间人防护**：记录主机公钥；未知或变更指纹需用户在原生对话框中确认。
 4. **私钥内存认证**：SSH/SFTP 公钥认证使用 `userauth_pubkey_memory`（不在临时目录落盘 PEM）。
-5. **路径沙箱**：会话日志与 SFTP 本地路径须落在允许的用户目录或应用数据目录内（Windows 另含非系统盘根目录）。
+5. **路径沙箱**：会话日志、SFTP 本地路径与 Local 会话工作目录须落在允许的用户目录或应用数据目录内（Windows 另含非系统盘根目录）。
 6. **串口安全**：仅允许连接 `listPorts` 枚举结果中的路径。
 7. **凭据 vault**：ChaCha20-Poly1305 加密；主密钥由 OS keyring（`keyring` crate）保管。
 
@@ -327,6 +328,7 @@ npm run mod:ver -- x.x.x
 | 中文乱码 | 将会话编码设为 **GBK** 或 **GB18030** |
 | SFTP 提示路径不允许 | 选择下载/文档/用户主目录下的路径，勿选系统目录 |
 | 串口列表为空 | 点击 **刷新**；Linux 用户需加入 `dialout` 组 |
+| Local Shell 无法启动 | Shell 可留空以使用系统默认（`$SHELL` / `COMSPEC`）；自定义路径须存在；工作目录请选用户主目录下的路径 |
 | 每次连接都提示主机密钥 | 检查应用数据目录是否可写；避免只读配置环境运行 |
 | 导入失败 / 文件类型错误 | 确认使用正确的导出文件（会话 vs 设置）；单文件不超过 8 MB |
 | Isolation / invoke 被拦截 | 新增命令须同步改 `lib.rs`、`invoke_commands.rs`、`src-isolation/index.js` |

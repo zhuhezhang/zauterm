@@ -1,4 +1,4 @@
-//! SSH / SFTP / Telnet / Serial 会话管理器
+//! SSH / SFTP / Telnet / Serial / Local 会话管理器
 
 pub mod ssh;
 pub mod sftp;
@@ -21,6 +21,8 @@ pub struct AppState {
     pub telnet: Arc<DashMap<SessionId, stream::StreamSessionHandle>>,
     /// Serial 会话句柄
     pub serial: Arc<DashMap<SessionId, stream::StreamSessionHandle>>,
+    /// 本机 Shell 会话句柄
+    pub local: Arc<DashMap<SessionId, stream::StreamSessionHandle>>,
     /// 已知主机状态
     pub known_hosts: Arc<crate::known_hosts::KnownHostsState>,
     /// 用户界面语言
@@ -35,6 +37,7 @@ impl Default for AppState {
             sftp: Arc::new(DashMap::new()),
             telnet: Arc::new(DashMap::new()),
             serial: Arc::new(DashMap::new()),
+            local: Arc::new(DashMap::new()),
             known_hosts: Arc::new(crate::known_hosts::KnownHostsState::default()),
             ui_language: Arc::new(parking_lot::Mutex::new("zh".into())),
         }

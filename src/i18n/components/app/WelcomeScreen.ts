@@ -4,12 +4,18 @@ export const WELCOME = {
     "subtitle": "Terminal Emulator",
     "sshDesc": "安全 Shell",
     "telnetDesc": "Telnet 协议",
-    "serialDesc": "串口"
+    "serial": "串口",
+    "serialDesc": "串口连接",
+    "local": "本地",
+    "localDesc": "本机 Shell"
   },
   en: {
     "subtitle": "Terminal Emulator",
     "sshDesc": "Secure Shell",
     "telnetDesc": "Telnet protocol",
-    "serialDesc": "Serial port"
+    "serial": "Serial",
+    "serialDesc": "Serial port",
+    "local": "Local",
+    "localDesc": "Local shell"
   },
 }

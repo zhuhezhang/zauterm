@@ -40,3 +40,20 @@ export const SERIAL = {
       'The serial path must be a device from the current system list. Refresh or reopen the Serial tab and pick a path from the list',
   },
 }
+
+export const LOCAL = {
+  zh: {
+    shellInvalid: 'Shell 路径无效',
+    shellNotFound: '找不到指定的 Shell 可执行文件',
+    cwdInvalid: '工作目录无效',
+    cwdNotFound: '找不到指定的工作目录',
+    cwdDenied: '不允许在该工作目录启动本机 Shell',
+  },
+  en: {
+    shellInvalid: 'Invalid shell path',
+    shellNotFound: 'Shell executable not found',
+    cwdInvalid: 'Invalid working directory',
+    cwdNotFound: 'Working directory not found',
+    cwdDenied: 'Working directory is not allowed for local shell',
+  },
+}

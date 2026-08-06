@@ -1,5 +1,6 @@
 pub mod app;
 pub mod credentials;
+pub mod local;
 pub mod log;
 pub mod serial;
 pub mod sftp;
