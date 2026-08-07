@@ -1,6 +1,6 @@
 # ZauTerm
 
-简体中文 · **[English](README.md)** · v3.3.1
+简体中文 · **[English](README.md)** · v3.3.2
 
 ZauTerm 是一款基于 **Tauri 2**、**React** 与 **xterm.js** 的跨平台桌面终端模拟器。支持 **SSH**、**SFTP**、**Telnet**、**串口（Serial）** 与 **本地（Local）** Shell 连接，并提供会话保存、层级分组、加密凭据存储，以及自定义界面（覆盖式标题栏、深色/浅色主题、中英双语）。
 

@@ -1,5 +1,8 @@
 //! Zauterm 主库，包含所有功能模块和命令
 
+// 抑制链接警告 LNK4099：Windows 上 vendored OpenSSL 静态链接常缺 ossl_static.pdb，MSVC LNK4099 经 rustc 变成 linker_messages 警告
+#![cfg_attr(windows, allow(linker_messages))]
+
 mod commands;  // Rust 的模块声明: 告诉编译器「crate 里有这些子模块」，并把它们挂到 lib.rs 这个库根上
 mod dialogs;
 mod encoding;

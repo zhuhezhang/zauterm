@@ -1,6 +1,8 @@
 //! Zauterm 主程序入口
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// 与 lib.rs 相同：抑制 bin 链接阶段的 OpenSSL LNK4099 / linker_messages 警告
+#![cfg_attr(windows, allow(linker_messages))]
 /*
  * 条件编译属性
  * #![...] 作用于整个 crate，不加 ! 则只作用于 main 函数，也就是后面紧跟的函数、结构体、模块等

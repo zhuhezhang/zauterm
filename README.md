@@ -1,6 +1,6 @@
 # ZauTerm
 
-**[简体中文](README.zh-CN.md)** · English · v3.3.1
+**[简体中文](README.zh-CN.md)** · English · v3.3.2
 
 ZauTerm is a cross-platform desktop terminal emulator built with **Tauri 2**, **React**, and **xterm.js**. It supports **SSH**, **SFTP**, **Telnet**, **Serial**, and **Local** (native shell) connections, with saved sessions, hierarchical grouping, encrypted credential storage, and a polished custom UI (overlay title bar, dark/light themes, bilingual interface).
 

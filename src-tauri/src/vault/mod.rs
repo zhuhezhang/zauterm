@@ -352,15 +352,21 @@ pub fn clear_all(app_data: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::MutexGuard;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    /// 测试主密钥覆盖
-    struct TestKeyGuard;
+    /// 串行化依赖 TEST_MASTER_KEY 的用例，避免并行 Drop 清空密钥导致竞态
+    static TEST_KEY_LOCK: Mutex<()> = Mutex::new(());
+
+    /// 测试主密钥覆盖（持有锁直至用例结束）
+    struct TestKeyGuard {
+        _lock: MutexGuard<'static, ()>,
+    }
 
     impl Drop for TestKeyGuard {
-        /// 默认实现
+        /// 清空测试主密钥；字段 Drop 随后释放 TEST_KEY_LOCK
         fn drop(&mut self) {
-            if let Ok(mut g) = TEST_MASTER_KEY.lock() {  // 如果测试主密钥覆盖存在，则清空
+            if let Ok(mut g) = TEST_MASTER_KEY.lock() {
                 *g = None;
             }
         }
@@ -368,13 +374,14 @@ mod tests {
 
     /// 设置测试主密钥
     /// # 返回
-    /// 测试主密钥
+    /// 测试主密钥守卫（含全局串行锁）
     fn with_test_key() -> TestKeyGuard {
-        let mut key = [0u8; 32];  // 生成一个随机的32字节主密钥
+        let lock = TEST_KEY_LOCK.lock().unwrap();
+        let mut key = [0u8; 32];  // 生成一个固定的32字节主密钥
         key[0] = 7;
         key[31] = 9;
         *TEST_MASTER_KEY.lock().unwrap() = Some(key);
-        TestKeyGuard
+        TestKeyGuard { _lock: lock }
     }
 
     /// 生成一个唯一的临时目录
@@ -437,7 +444,7 @@ mod tests {
         .unwrap();
 
         let got = get_secrets(&dir, "sess-1");
-        assert_eq!(got["found"], true);
+        assert_eq!(got["found"], true, "get_secrets failed: {got}");
         assert_eq!(got["password"], "p@ss");
         assert_eq!(got["passphrase"], "ph");
         assert!(got["privateKey"].as_str().unwrap().contains("BEGIN KEY"));

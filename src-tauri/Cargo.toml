@@ -1,6 +1,6 @@
 [package]
 name = "zauterm"
-version = "3.3.1"
+version = "3.3.2"
 description = "ZauTerm - cross-platform terminal (SSH/SFTP/Telnet/Serial/Local)"
 authors = ["zhuhezhang"]
 edition = "2021"  # Rust版本
