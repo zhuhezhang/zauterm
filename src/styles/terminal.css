@@ -25,3 +25,8 @@
 .terminal-container .xterm-viewport {
   overflow-y: auto !important;
 }
+
+/* 缓解 xterm DomRenderer 选区滚出视口后顶部残留高亮（xtermjs/xterm.js#5198） */
+.terminal-container .xterm-selection {
+  overflow: hidden;
+}
