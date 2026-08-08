@@ -64,7 +64,7 @@ function TerminalPanel({
     connectSession(term, session, sessionRef, onUpdate, cleanupRef, disconnectedRef, () => cancelled, logFileRef, settingsRef)
 
     const logOnResize = term.onResize(() => {
-      if (normalizeLoggingMode(settingsRef.current?.loggingMode) === 'buffer') {
+      if (normalizeLoggingMode(settingsRef.current?.loggingMode) !== 'none') {
         logFileRef.current?.scheduleSnapshot?.()
       }
     })
@@ -180,8 +180,8 @@ function TerminalPanel({
         ro.observe(container)
         cleanupRef.current.push(() => ro.disconnect())
 
-        const logOnResize = term.onResize(() => {  // 重连后继续监听终端尺寸变化以更新日志快照
-          if (normalizeLoggingMode(settingsRef.current?.loggingMode) === 'buffer') {
+        const logOnResize = term.onResize(() => {  // 重连后继续监听终端尺寸变化以提交日志增量
+          if (normalizeLoggingMode(settingsRef.current?.loggingMode) !== 'none') {
             logFileRef.current?.scheduleSnapshot?.()
           }
         })

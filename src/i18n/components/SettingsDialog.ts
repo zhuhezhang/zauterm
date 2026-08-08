@@ -61,7 +61,7 @@ export const SETTINGS = {
       },
       "loggingMode": {
         "label": "终端 I/O 日志",
-        "desc": "选「无」关闭。否则将会话写入下方目录中的独立 .log 文件。「原始流追加」按下行数据去 ANSI 后追加，在 zsh 重绘等场景可能与所见不一致；「缓冲快照覆盖」从 xterm 缓存导出纯文本并覆盖写入，与屏幕输出一致，但超过「视口外滚动历史（行）」会丢弃更早内容且覆盖写入对磁盘不友好，特别是当使用「视口外滚动历史（行）」较大时，可能会导致磁盘占用过高，不推荐使用该模式"
+        "desc": "开启后将会话写入下方目录中的独立 .log 文件：从 xterm 缓冲导出与屏幕一致的纯文本，仅追加新提交的行（不含当前编辑行，进度条等只保留最终态）；全屏 TUI（如 vim）期间不记入。清屏后磁盘上仍保留历史时间线"
       },
       "logPath": {
         "label": "日志保存目录",
@@ -82,9 +82,6 @@ export const SETTINGS = {
       "backspaceAuto": "Auto",
       "backspaceDel": "DEL (0x7F)",
       "backspaceBs": "BS (0x08)",
-      "loggingModeNone": "无",
-      "loggingModeStream": "原始流追加",
-      "loggingModeBuffer": "缓冲快照覆盖（不推荐）",
       "terminalFont": {
         "cascadia": "Cascadia Code",
         "jetbrains": "JetBrains Mono",
@@ -100,7 +97,7 @@ export const SETTINGS = {
     "logDefaultDir": "系统下载目录（默认）",
     "logResetDefault": "恢复默认目录为：\n{path}",
     "logResetAria": "恢复默认日志目录",
-    "logPathDisabledTip": "当前未启用终端 I/O 日志，目录设置无效；先选择缓冲或原始流模式后再配置",
+    "logPathDisabledTip": "当前未启用终端 I/O 日志，目录设置无效；先开启日志后再配置",
     "vaultEncryptionUnavailableTip": "当前系统不支持加密存储（例如 Linux 未配置密钥环），无法开启此项；保存 SSH 会话时不会将密码、私钥等写入加密库",
     "logPathRejected": "所选目录不在允许范围内，会话日志将无法写入",
     "logPathValidateFail": "校验日志目录失败：{msg}",
@@ -300,7 +297,7 @@ export const SETTINGS = {
       },
       "loggingMode": {
         "label": "Terminal I/O logging",
-        "desc": "Choose “None” to disable. Otherwise each session is written to its own .log file under the directory below. Raw stream append: strip ANSI and append chunks (can diverge from what you see, e.g. zsh redraws). Buffer snapshot overwrite: export plain text from the xterm buffer and overwrite the file (matches the screen, but scrollback limits history and overwrite is heavier on disk, especially when using large scrollback limits, which may cause high disk usage, not recommended to use this mode)"
+        "desc": "When on, each session is written to its own .log file under the directory below: plain text from the xterm buffer (matches the screen), appending only newly committed lines (the current editing line is excluded so progress bars keep their final state). Full-screen TUIs (e.g. vim) are skipped. After a clear screen, earlier history remains on disk as a timeline"
       },
       "logPath": {
         "label": "Log directory",
@@ -321,9 +318,6 @@ export const SETTINGS = {
       "backspaceAuto": "Auto",
       "backspaceDel": "DEL (0x7F)",
       "backspaceBs": "BS (0x08)",
-      "loggingModeNone": "None",
-      "loggingModeStream": "Raw stream append",
-      "loggingModeBuffer": "Buffer snapshot overwrite (not recommended)",
       "terminalFont": {
         "cascadia": "Cascadia Code",
         "jetbrains": "JetBrains Mono",
@@ -339,7 +333,7 @@ export const SETTINGS = {
     "logDefaultDir": "Downloads (default)",
     "logResetDefault": "Reset default directory to:\n{path}",
     "logResetAria": "Reset log directory to default",
-    "logPathDisabledTip": "Logging is off, directory is ignored. Pick buffer or stream mode first to configure it",
+    "logPathDisabledTip": "Logging is off, directory is ignored. Turn logging on first to configure it",
     "vaultEncryptionUnavailableTip": "Encrypted storage is unavailable on this system (e.g. no keyring on Linux). This option cannot be enabled; SSH passwords and keys will not be saved to the vault",
     "logPathRejected": "This folder is outside the allowed locations; session logs cannot be written there",
     "logPathValidateFail": "Could not validate log folder: {msg}",

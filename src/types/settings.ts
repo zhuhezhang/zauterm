@@ -6,8 +6,8 @@ import type { TerminalFontFamilyKey } from '@/lib/terminal/terminalFonts'
 export type AppTheme = 'dark' | 'light' | 'auto'
 /** 界面语言 */
 export type UiLanguageSetting = 'auto' | 'zh' | 'en'
-/** 日志模式 */
-export type LoggingMode = 'none' | 'stream' | 'buffer'
+/** 日志模式：none = 关闭；session = 缓冲已提交行增量追加（旧 stream/buffer 导入时归一为此） */
+export type LoggingMode = 'none' | 'session'
 /** 高亮规则 */
 export interface HighlightRule {
   /** 规则 ID */

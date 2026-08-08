@@ -27,69 +27,72 @@ export function exportTerminalBuffer(term: Terminal | null): string {
 }
 
 /**
- * 去掉已完整的 ANSI/OSC 等转义序列（CSI 如 [33m、[42D；OSC 至 BEL 或 ST 等）
- * @param s 文本
- * @returns 去掉已完整的 ANSI/OSC 等转义序列后的文本
+ * 从 normal buffer 导出已提交纯文本（默认不含光标行，避免进度条中间态）
+ * @param term 终端实例
+ * @param includeCursorLine 是否包含光标所在行（会话结束 flush 时为 true）
  */
-function stripCompleteAnsiEscapes(s: string): string {
-  if (!s) return ''
-  return s
-    .replace(/\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/g, '')
-    .replace(/\u009b[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/g, '')
-    .replace(/\x1b\][^\x07]*\x07/g, '')
-    .replace(/\x1b\][^\x1b]*\x1b\\/g, '')
-    .replace(/\x1b[\x20-\x2f][\x40-\x7e]/g, '')
-    .replace(/\x1b[78]/g, '')
-}
-
-/**
- * 从串尾拆出可能未闭合的转义前缀，避免分包时把 \x1b 与 [33m 拆开误当成可见字符
- * @param s 文本
- * @returns 从串尾拆出可能未闭合的转义前缀后的文本
- */
-function peelIncompleteAnsiSuffix(s: string): { body: string; carry: string } {
-  if (!s) return { body: '', carry: '' }
-  let m: RegExpMatchArray | null
-  if ((m = s.match(/\x1b\](?:[^\x07\x1b]|\x1b(?!\\))*$/))) {
-    return { body: s.slice(0, -m[0].length), carry: m[0] }
+export function exportCommittedNormalBuffer(term: Terminal, includeCursorLine: boolean): string {
+  const buf = term.buffer.normal
+  const endExclusive = includeCursorLine
+    ? Math.min(buf.length, buf.baseY + buf.cursorY + 1)
+    : Math.min(buf.length, buf.baseY + buf.cursorY)
+  if (endExclusive <= 0) return ''
+  const lines: string[] = []
+  for (let i = 0; i < endExclusive; i++) {
+    const line = buf.getLine(i)
+    if (!line) continue
+    lines.push(line.translateToString(true).replace(/\u00a0/g, ' '))
   }
-  if ((m = s.match(/\x1b\[[\x30-\x3f\x20-\x2f]*$/))) {
-    return { body: s.slice(0, -m[0].length), carry: m[0] }
+  return lines.join('\n').trimEnd()
+}
+
+/**
+ * 相对上次已提交文本计算应追加的增量（处理前缀增长与 scrollback 顶行淘汰）
+ * @param prev 上次已提交全文（对应当时 buffer 已提交区）
+ * @param next 当前已提交全文
+ * @returns delta 写入磁盘的增量；committed 下次对比用的已提交全文（恒为 next）
+ */
+export function diffCommittedLogDelta(prev: string, next: string): { delta: string; committed: string } {
+  if (next === prev) return { delta: '', committed: prev }
+  if (!prev) return { delta: next, committed: next }
+  if (next.startsWith(prev)) {
+    return { delta: next.slice(prev.length), committed: next }
   }
-  if (s.endsWith('\x1b')) return { body: s.slice(0, -1), carry: '\x1b' }
-  if (s.endsWith('\u009b')) return { body: s.slice(0, -1), carry: '\u009b' }
-  return { body: s, carry: '' }
+
+  const prevLines = prev.length ? prev.split('\n') : []
+  const nextLines = next.length ? next.split('\n') : []
+  const maxOverlap = Math.min(prevLines.length, nextLines.length)
+  let overlap = 0
+  for (let k = maxOverlap; k >= 1; k--) {
+    let ok = true
+    for (let i = 0; i < k; i++) {
+      if (prevLines[prevLines.length - k + i] !== nextLines[i]) {
+        ok = false
+        break
+      }
+    }
+    if (ok) {
+      overlap = k
+      break
+    }
+  }
+
+  const tail = nextLines.slice(overlap).join('\n')
+  if (!tail) return { delta: '', committed: next }
+  if (overlap === 0) {
+    // 清屏/大范围重绘：保留磁盘历史，用空行与新区隔开
+    return { delta: prev ? `\n\n${tail}` : tail, committed: next }
+  }
+  return { delta: `\n${tail}`, committed: next }
 }
 
 /**
- * 去掉其余 C0 控制符（保留 \t \n \r）
- * @param s 文本
- * @returns 去掉其余 C0 控制符（保留 \t \n \r）后的文本
- */
-function stripOtherC0Controls(s: string): string {
-  return s.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
-}
-
-/**
- * 将一段终端输出转为适合写入 .log 的纯文本（可见字符 + 换行制表）
- * @param carry 转义前缀
- * @param chunk 终端输出
- * @returns 将一段终端输出转为适合写入 .log 的纯文本（可见字符 + 换行制表）后的文本
- */
-function stripAnsiForLogChunk(carry: string, chunk: string): { text: string; carry: string } {
-  const raw = carry + chunk
-  const { body, carry: nextCarry } = peelIncompleteAnsiSuffix(raw)
-  const text = stripOtherC0Controls(stripCompleteAnsiEscapes(body))
-  return { text, carry: nextCarry }
-}
-
-/**
- * 设置会话日志：buffer = xterm 缓冲快照整文件覆盖；stream = 下行流去 ANSI 后追加。
+ * 设置会话日志：从 xterm normal buffer 已提交行做增量 append（与屏幕一致、磁盘友好）
  * @param session 会话对象
  * @param settings 设置
  * @param logFileRef 日志文件引用
  * @param logFileStemStateRef 日志文件名状态引用
- * @param _settingsRef 预留与调用方签名一致（本函数内以创建时的 logKind 为准）
+ * @param _settingsRef 预留与调用方签名一致
  */
 export function setupLogging(
   session: ActiveSession,
@@ -102,12 +105,14 @@ export function setupLogging(
   const logDir = resolveLoggingDirectory(settings)
   if (!logDir) return
 
-  const logKind = normalizeLoggingMode(settings.loggingMode)  // 本控制器创建时的写入方式（关闭日志时 settings 可能已变为 none，收尾刷盘仍按此方式执行）
   const stemState = logFileStemStateRef.current
   if (stemState.sessionId !== session.id) {  // 新会话：重置文件名 stem
     stemState.sessionId = session.id
     stemState.stem = null
   }
+
+  /** 同一标签页内复用已有日志文件时，首次只对齐 buffer 水位，避免重连/重建控制器重复追加整屏 */
+  const continuingFile = Boolean(stemState.stem)
 
   /** 同一标签页内复用的日志主文件名（不含 .log） */
   let logFileName = stemState.stem
@@ -117,91 +122,56 @@ export function setupLogging(
     stemState.stem = logFileName
   }
 
-  // --- stream（追加）
-  let pending = ''
-  let ansiCarry = ''
-  let streamTimer: number | null = null
-  /** 刷新待处理流数据 */
-  const flushPendingStream = () => {
-    streamTimer = null
-    if (!pending) return
-    const chunk = pending
-    pending = ''
-    window.zauterm?.log?.append?.(logDir, logFileName, chunk)
-  }
-
-  /** 将数据追加到日志文件中 */
-  const enqueue = (chunk: string) => {
-    if (logKind !== 'stream') return
-    if (chunk === '' || chunk == null) return
-    if (typeof chunk !== 'string') return
-    if (!window.zauterm?.log?.append) return
-    const { text, carry } = stripAnsiForLogChunk(ansiCarry, chunk)
-    ansiCarry = carry
-    if (!text) return
-    pending += text
-    if (streamTimer != null) return
-    streamTimer = window.setTimeout(flushPendingStream, 80)
-  }
-
-  // --- buffer（整文件覆盖）
-  /** xterm 终端实例 */
   let terminal: Terminal | null = null
-  /** 定时器引用，用于延迟执行快照 */
-  let snapshotTimer: number | null = null
-  /** 快照延迟时间 */
-  const SNAPSHOT_DEBOUNCE_MS = 80
-  /** 刷新快照 */
-  const flushSnapshot = () => {
-    if (!window.zauterm?.log?.write) return
+  let lastCommitted = ''
+  /** 续写同一文件时，第一次 commit 只同步水位不写盘 */
+  let seeded = !continuingFile
+  let commitTimer: number | null = null
+  const COMMIT_DEBOUNCE_MS = 80
+
+  const flushCommit = (includeCursorLine: boolean) => {
+    if (!window.zauterm?.log?.append) return
     if (!terminal) return
+    // vim/htop 等 alternate screen：不记入会话日志
+    if (terminal.buffer.active !== terminal.buffer.normal) return
     try {
-      window.zauterm.log.write(logDir, logFileName, exportTerminalBuffer(terminal))
+      const current = exportCommittedNormalBuffer(terminal, includeCursorLine)
+      if (!seeded) {
+        lastCommitted = current
+        seeded = true
+        return
+      }
+      const { delta, committed } = diffCommittedLogDelta(lastCommitted, current)
+      lastCommitted = committed
+      if (!delta) return
+      window.zauterm.log.append(logDir, logFileName, delta)
     } catch {}
   }
 
-  /** 计划快照 */
   const scheduleSnapshot = () => {
-    if (logKind !== 'buffer') return
-    if (!window.zauterm?.log?.write) return
+    if (!window.zauterm?.log?.append) return
     if (!terminal) return
-    if (snapshotTimer != null) {
-      window.clearTimeout(snapshotTimer)
-      snapshotTimer = null
+    if (commitTimer != null) {
+      window.clearTimeout(commitTimer)
+      commitTimer = null
     }
-    snapshotTimer = window.setTimeout(() => {
-      snapshotTimer = null
-      flushSnapshot()
-    }, SNAPSHOT_DEBOUNCE_MS)
+    commitTimer = window.setTimeout(() => {
+      commitTimer = null
+      flushCommit(false)
+    }, COMMIT_DEBOUNCE_MS)
   }
 
-  /** 立即刷盘 */
   const flushNow = () => {
-    if (snapshotTimer != null) {
-      window.clearTimeout(snapshotTimer)
-      snapshotTimer = null
+    if (commitTimer != null) {
+      window.clearTimeout(commitTimer)
+      commitTimer = null
     }
-    if (streamTimer != null) {
-      window.clearTimeout(streamTimer)
-      streamTimer = null
-    }
-    if (logKind === 'buffer') {
-      pending = ''
-      ansiCarry = ''
-      flushSnapshot()
-    } else {
-      if (ansiCarry) {
-        const { text } = stripAnsiForLogChunk(ansiCarry, '')
-        ansiCarry = ''
-        if (text) pending += text
-      }
-      flushPendingStream()
-    }
+    flushCommit(true)
   }
 
   const setTerminal = (t: Terminal | null) => {
     terminal = t
   }
 
-  logFileRef.current = { setTerminal, scheduleSnapshot, enqueue, flushNow }
+  logFileRef.current = { setTerminal, scheduleSnapshot, flushNow }
 }

@@ -267,8 +267,8 @@ function normalizeAlgorithmPreferences(
 const APP_THEME_SET = new Set(['dark', 'light', 'auto'])
 /** 界面语言的值集合 */
 const UI_LANGUAGE_SET = new Set(['auto', 'en', 'zh'])
-/** 日志模式的值集合 */
-const LOGGING_MODE_SET = new Set(['none', 'stream', 'buffer'])
+/** 含旧枚举 stream/buffer，导入后由 normalizeLoggingMode 归一为 session */
+const LOGGING_MODE_SET = new Set(['none', 'session', 'stream', 'buffer'])
 /** 终端字体 preset 的值集合 */
 const TERMINAL_FONT_FAMILY_SET = new Set<string>(TERMINAL_FONT_FAMILY_OPTIONS.map((o) => o.value))
 
@@ -377,14 +377,14 @@ export async function sanitizeImportedSettings(
     }
   }
 
-  // --- loggingMode：小写化后校验枚举 ---
+  // --- loggingMode：小写化后校验枚举（含旧 stream/buffer，随后 normalize 为 session） ---
   if ('loggingMode' in stripped) {
     const v = String(stripped.loggingMode ?? '').trim().toLowerCase()
     if (!LOGGING_MODE_SET.has(v)) {
       out.loggingMode = current.loggingMode
       pushSettingsImportWarning(warnings, 'invalidEnum', { field: 'loggingMode', value: String(stripped.loggingMode ?? '') })
     } else {
-      out.loggingMode = v as AppSettings['loggingMode']
+      out.loggingMode = normalizeLoggingMode(v)
     }
   }
 

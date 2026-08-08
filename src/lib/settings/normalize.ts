@@ -71,15 +71,15 @@ export function clampSettingsNumberField(key: keyof AppSettings, raw: unknown): 
 }
 
 /**
- * 会话日志：none = 关闭；buffer = 与 xterm 屏幕缓冲一致；stream = 下行原始流去 ANSI 后追加
+ * 会话日志：none = 关闭；session = 缓冲已提交行增量追加（旧 stream/buffer 归一为此）
  * @param m 用户输入的日志模式
  * @returns 规范后的日志模式
  */
 export function normalizeLoggingMode(m: unknown): LoggingMode {
   const v = String(m ?? '').trim().toLowerCase()
   if (v === 'none') return 'none'
-  if (v === 'stream') return 'stream'
-  return 'buffer'
+  if (v === 'session' || v === 'stream' || v === 'buffer') return 'session'
+  return 'session'
 }
 
 /**

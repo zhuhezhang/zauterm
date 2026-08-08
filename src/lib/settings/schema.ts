@@ -49,15 +49,7 @@ export const SETTINGS_SCHEMA = [
   {
     section: 'logging',
     items: [
-      {
-        key: 'loggingMode',
-        type: 'select',
-        options: [
-          { value: 'none', labelKey: 'settings.options.loggingModeNone' },
-          { value: 'stream', labelKey: 'settings.options.loggingModeStream' },
-          { value: 'buffer', labelKey: 'settings.options.loggingModeBuffer' },
-        ],
-      },
+      { key: 'loggingMode', type: 'boolean' },
       { key: 'logPath', type: 'path' },
     ],
   },

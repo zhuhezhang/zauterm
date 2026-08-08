@@ -69,9 +69,11 @@ describe('clampSettingsNumberField', () => {
 describe('normalizeLoggingMode', () => {
   it('normalizes known modes', () => {
     expect(normalizeLoggingMode('none')).toBe('none')
-    expect(normalizeLoggingMode('STREAM')).toBe('stream')
-    expect(normalizeLoggingMode('')).toBe('buffer')
-    expect(normalizeLoggingMode(undefined)).toBe('buffer')
+    expect(normalizeLoggingMode('session')).toBe('session')
+    expect(normalizeLoggingMode('STREAM')).toBe('session')
+    expect(normalizeLoggingMode('buffer')).toBe('session')
+    expect(normalizeLoggingMode('')).toBe('session')
+    expect(normalizeLoggingMode(undefined)).toBe('session')
   })
 })
 

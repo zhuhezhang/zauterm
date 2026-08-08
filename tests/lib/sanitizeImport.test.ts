@@ -52,7 +52,7 @@ describe('sanitizeImportedSettings', () => {
     )
     expect(settings.appTheme).toBe('dark')
     expect(settings.uiLanguage).toBe('en')
-    expect(settings.loggingMode).toBe('buffer')
+    expect(settings.loggingMode).toBe('session')
     expect(warnings).toEqual([])
   })
 })

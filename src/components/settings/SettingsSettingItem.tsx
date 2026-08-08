@@ -79,12 +79,23 @@ export default function SettingsSettingItem({
       {item.type === 'boolean' && settingKey && (
         <button
           type="button"
-          className={`settings-toggle ${form[settingKey] ? 'on' : 'off'}`}
+          className={`settings-toggle ${
+            settingKey === 'loggingMode'
+              ? (normalizeLoggingMode(form.loggingMode) !== 'none' ? 'on' : 'off')
+              : (form[settingKey] ? 'on' : 'off')
+          }`}
           disabled={vaultSaveDisabled}
           aria-disabled={vaultSaveDisabled}
           onClick={() => {
             if (vaultSaveDisabled) return
-            set(settingKey, !form[settingKey])
+            if (settingKey === 'loggingMode') {
+              set(
+                'loggingMode',
+                normalizeLoggingMode(form.loggingMode) === 'none' ? 'session' : 'none',
+              )
+              return
+            }
+            set(settingKey, !form[settingKey] as AppSettings[typeof settingKey])
           }}
         >
           <span className="settings-toggle-knob" />
